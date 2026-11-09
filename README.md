@@ -1,5 +1,5 @@
 # shove-off
 
-Shove Off: sumo - shove the wrestlers off the dohyo
+Shove Off: sumo - your own wrestler shoves them off the dohyo
 
 Play: https://maivu-prog.github.io/shove-off/

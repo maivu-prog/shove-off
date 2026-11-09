@@ -45,6 +45,28 @@
     background:linear-gradient(180deg,#ffe493,#ffbe45);
     box-shadow:0 6px 0 #c9801a,0 12px 22px rgba(40,10,26,.4);cursor:pointer}
   #again:active{transform:translateY(4px);box-shadow:0 2px 0 #c9801a,0 6px 12px rgba(40,10,26,.4)}
+  /* MY SUMO: a bottom sheet so the wrestler stays visible on the ring above it */
+  #locker{position:absolute;left:0;right:0;bottom:0;display:none;flex-direction:column;gap:9px;
+    padding:16px 18px calc(18px + env(safe-area-inset-bottom));pointer-events:auto;
+    background:linear-gradient(180deg,#fff6e8,#ffe2bd);border-radius:26px 26px 0 0;
+    box-shadow:0 -10px 30px rgba(74,27,52,.28)}
+  #locker.on{display:flex}
+  #locker .ttl{font-size:26px;font-weight:800;color:#6a2a1a;letter-spacing:.08em;text-align:center}
+  #locker .row{display:flex;align-items:center;gap:10px}
+  #locker .rl{width:62px;font-size:14px;font-weight:800;color:#a0623a;letter-spacing:.1em}
+  #locker .sw{display:flex;gap:7px;flex-wrap:wrap;flex:1}
+  #locker .sw button{width:38px;height:38px;border-radius:50%;border:3px solid rgba(0,0,0,.12);cursor:pointer;
+    box-shadow:0 3px 0 rgba(0,0,0,.18)}
+  #locker .sw button.on{border:4px solid #2b1410;transform:scale(1.08)}
+  #locker .sw button.hair{width:auto;height:42px;border-radius:14px;padding:0 12px;background:#fffdf6;
+    font-family:inherit;font-size:15px;font-weight:800;color:#5e3410;border-color:#e2c49a}
+  #locker .sw button.hair.on{background:#2b1410;color:#fff;border-color:#2b1410}
+  #fight{margin-top:4px;min-height:62px;border:0;border-radius:31px;font-family:inherit;font-size:30px;font-weight:800;
+    color:#5a3300;letter-spacing:.08em;background:linear-gradient(180deg,#ffe493,#ffbe45);
+    box-shadow:0 6px 0 #c9801a,0 12px 22px rgba(40,10,26,.3);cursor:pointer}
+  #fight:active{transform:translateY(4px);box-shadow:0 2px 0 #c9801a}
+  #custom{pointer-events:auto;min-height:48px;padding:0 28px;border:3px solid #fff3e2;border-radius:24px;background:transparent;
+    font-family:inherit;font-size:20px;font-weight:800;color:#fff3e2;letter-spacing:.06em;cursor:pointer}
   @keyframes sway{from{transform:translateX(-24px)}to{transform:translateX(24px)}}
 </style>
 </head>
@@ -59,6 +81,14 @@
     <div class="big" id="overbig">OFF THE RING</div>
     <div class="sub" id="oversub"></div>
     <button id="again">AGAIN</button>
+    <button id="custom">MY SUMO</button>
+  </div>
+  <div id="locker">
+    <div class="ttl">MY SUMO</div>
+    <div class="row"><span class="rl">SKIN</span><div class="sw" id="swSkin"></div></div>
+    <div class="row"><span class="rl">BELT</span><div class="sw" id="swBelt"></div></div>
+    <div class="row"><span class="rl">HAIR</span><div class="sw" id="swHair"></div></div>
+    <button id="fight">FIGHT!</button>
   </div>
 </div>
 <script>/**
@@ -269,8 +299,10 @@ function buildFoe(r, col, skinCol) {
   body.castShadow = true;
   ink(body, 1.06);
   g.add(body);
+  var arms = [];
   for (var ai = -1; ai <= 1; ai += 2) {
     var arm = new THREE.Mesh(GEO.sph, m);
+    arms.push(arm);
     arm.scale.set(r * 0.24, r * 0.22, r * 0.36);
     arm.position.set(ai * r * 0.98, 0, -r * 0.22);
     arm.rotation.y = ai * 0.35;
@@ -320,6 +352,32 @@ function buildFoe(r, col, skinCol) {
   }
   g.userData.body = body; g.userData.belt = belt; g.userData.face = face;
   g.userData.brow = brow; g.userData.mat = m; g.userData.base = new THREE.Color(skin);
+  g.userData.arms = arms; g.userData.cap = cap; g.userData.bun = bun;
+  return g;
+}
+
+// ---------------------------------------------------------------- the player's own wrestler
+// Same footprint as the hand it replaces (MITT_R): the physics never knew it was a hand.
+var LOOK_SKIN = [0xf6d2b0, 0xe8b088, 0xc98a5e, 0x8f5a3a];
+var LOOK_BELT = [0xd83a3a, 0x1fb3a6, 0x2f4f8f, 0xe8b52a, 0x2b2b2b, 0xf28fb8];
+var LOOK_HAIR = ['KNOT', 'FAN', 'BAND'];
+function buildPlayer(look) {
+  var g = buildFoe(MITT_R, LOOK_BELT[look.belt], LOOK_SKIN[look.skin]);
+  var ud = g.userData;
+  if (look.hair === 1) {                      /* oicho-mage: the fanned ginkgo-leaf knot */
+    ud.bun.scale.set(MITT_R * 0.42, MITT_R * 0.12, MITT_R * 0.22);
+  } else if (look.hair === 2) {               /* shaved head + headband in the belt colour */
+    ud.cap.visible = false; ud.bun.visible = false;
+    var band = new THREE.Mesh(new THREE.TorusGeometry(MITT_R * 0.55, MITT_R * 0.09, 6, 20), mat(LOOK_BELT[look.belt]));
+    band.rotation.x = Math.PI / 2; band.position.y = MITT_R * 0.62;
+    ud.face.add(band);
+  }
+  // a soft teal ring at the feet: "this one is you", same as the hand had
+  var halo = new THREE.Mesh(new THREE.RingGeometry(MITT_R * 1.05, MITT_R * 1.32, 32),
+    new THREE.MeshBasicMaterial({ color: 0x4ff0dc, transparent: true, opacity: 0.75, depthWrite: false }));
+  halo.rotation.x = -Math.PI / 2; halo.position.y = 0.03;
+  g.add(halo);
+  ud.palm = ud.body;                          /* the old squash hook keeps working */
   return g;
 }
 
@@ -521,8 +579,23 @@ var G = {
   lastThrow: -9, chain: 0, timeScale: 1
 };
 var foes = [];
-var mittObj = buildMitt();
+var LOOK_KEY = 'shoveoff.look';
+var look = (function () {
+  try { var o = JSON.parse(localStorage.getItem(LOOK_KEY) || 'null'); if (o && o.skin !== undefined) return o; } catch (x) {}
+  return { skin: 0, belt: 0, hair: 0 };
+})();
+var mittObj = buildPlayer(look);
 scene.add(mittObj);
+function setLook(k, v) {
+  look[k] = v;
+  try { localStorage.setItem(LOOK_KEY, JSON.stringify(look)); } catch (x) {}
+  var p = mittObj.position.clone(), ry = mittObj.rotation.y;
+  scene.remove(mittObj);
+  mittObj = buildPlayer(look);
+  mittObj.position.copy(p); mittObj.rotation.y = ry;
+  scene.add(mittObj);
+  renderLocker();
+}
 var mitt = { x: 0, z: 1.25, vx: 0, vz: 0, r: MITT_R, m: 2.1, tx: 0, tz: 1.25, yaw: 0, squash: 0, y: 0, vy: 0, lastHit: -9 };
 
 var MITT_K = 260, MITT_C = 22, TARGET_R = RING_R - 0.55;
@@ -824,8 +897,15 @@ function paint(dt) {
   }
   mittObj.position.set(mitt.x, mitt.y, mitt.z);
   mittObj.rotation.y = mitt.yaw;
-  var sq = 1 - mitt.squash * 0.3;
-  mittObj.userData.palm.scale.set(MITT_R * 1.04 * (1 + mitt.squash * 0.22), MITT_R * 0.70 * sq, MITT_R * 0.80 * (1 + mitt.squash * 0.1));
+  // the player wrestler: squash on impact, both palms thrust forward (tsuppari) on every hit
+  var pud = mittObj.userData, sq = mitt.squash;
+  pud.body.scale.set(MITT_R * (1 + sq * 0.14), MITT_R * 0.93 * (1 - sq * 0.18), MITT_R * 0.95 * (1 + sq * 0.08));
+  var walk = Math.min(1, Math.hypot(mitt.vx, mitt.vz) / 6), tt = performance.now() * 0.014;
+  for (var ai2 = 0; ai2 < pud.arms.length; ai2++) {
+    var side = ai2 ? 1 : -1, beat = Math.max(0, Math.sin(tt + ai2 * Math.PI)) * walk * 0.25;
+    pud.arms[ai2].position.set(side * (0.97 - sq * 0.3), -0.05, -0.25 - sq * 0.55 - beat);
+    pud.arms[ai2].scale.set(0.24, 0.24, 0.38 + sq * 0.2);
+  }
 
   // foes
   var tmpAx = new THREE.Vector3(), qTilt = new THREE.Quaternion(), qYaw = new THREE.Quaternion();
@@ -961,6 +1041,43 @@ elAgain.addEventListener('click', function (e) {
   G.phase = 'play';
 });
 
+// MY SUMO: opens before the first bout and from the loss screen. Nothing here changes how it plays.
+var elLocker = document.getElementById('locker');
+function hexCss(h) { return '#' + ('000000' + h.toString(16)).slice(-6); }
+function renderLocker() {
+  var mk = function (id, list, key, isHair) {
+    var el = document.getElementById(id), h = '';
+    for (var i = 0; i < list.length; i++) {
+      h += '<button data-k="' + key + '" data-v="' + i + '" class="' + (isHair ? 'hair' : '') + (look[key] === i ? ' on' : '') + '"'
+        + (isHair ? '>' + list[i] : ' style="background:' + hexCss(list[i]) + '">') + '</button>';
+    }
+    el.innerHTML = h;
+  };
+  mk('swSkin', LOOK_SKIN, 'skin'); mk('swBelt', LOOK_BELT, 'belt'); mk('swHair', LOOK_HAIR, 'hair', true);
+}
+function openLocker() {
+  elOver.classList.remove('on');
+  reset(); G.phase = 'idle';
+  elHint.style.opacity = '0';
+  // stand the wrestler in the middle of the ring so the sheet never hides it
+  mitt.x = mitt.tx = 0; mitt.z = mitt.tz = 0; mitt.vx = mitt.vz = 0; mitt.yaw = Math.PI;
+  renderLocker(); elLocker.classList.add('on');
+}
+elLocker.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+elLocker.addEventListener('click', function (e) {
+  e.stopPropagation();
+  var b = e.target.closest ? e.target.closest('button[data-k]') : null;
+  if (b) { setLook(b.getAttribute('data-k'), +b.getAttribute('data-v')); thud(260, 0.06, 0.12, 'triangle'); }
+});
+document.getElementById('fight').addEventListener('click', function (e) {
+  e.stopPropagation();
+  elLocker.classList.remove('on');
+  reset(); G.phase = 'idle';
+  elHint.style.opacity = '1';
+  try { localStorage.setItem('shoveoff.seen', '1'); } catch (x) {}
+});
+document.getElementById('custom').addEventListener('click', function (e) { e.stopPropagation(); openLocker(); });
+
 // ------------------------------------------------------------- main loop
 var last = 0, acc = 0;
 var prevMX = 0, prevMZ = 0, prevParts = 0;
@@ -1058,6 +1175,7 @@ window.__toy = {
   up: function () { dragging = false; },
   tapScreen: function () { onDown(VIEW.w * 0.5, VIEW.h * 0.6); },
   reset: function () { reset(); G.phase = 'play'; },
+  locker: function () { openLocker(); },
   lat: function () { return window.__lat.slice(); },
   words: function () {
     var out = [];
@@ -1085,6 +1203,10 @@ window.__toy = {
 resize();
 reset();
 G.phase = 'idle';
+(function () {
+  var seen = false; try { seen = !!localStorage.getItem('shoveoff.seen'); } catch (x) {}
+  if (!seen && !/nolocker/.test(location.search) && !navigator.webdriver) openLocker();
+})();
 elHint.style.opacity = '1';
 requestAnimationFrame(tick);
 </script>
