@@ -46,7 +46,7 @@
     box-shadow:0 6px 0 #c9801a,0 12px 22px rgba(40,10,26,.4);cursor:pointer}
   #again:active{transform:translateY(4px);box-shadow:0 2px 0 #c9801a,0 6px 12px rgba(40,10,26,.4)}
   /* MY SUMO: a bottom sheet so the wrestler stays visible on the ring above it */
-  #locker{position:absolute;left:0;right:0;bottom:0;display:none;flex-direction:column;gap:9px;
+  #locker{position:absolute;left:0;right:0;bottom:0;display:none;flex-direction:column;gap:4px;
     padding:16px 18px calc(18px + env(safe-area-inset-bottom));pointer-events:auto;
     background:linear-gradient(180deg,#fff6e8,#ffe2bd);border-radius:26px 26px 0 0;
     box-shadow:0 -10px 30px rgba(74,27,52,.28)}
@@ -54,7 +54,7 @@
   #locker .ttl{font-size:26px;font-weight:800;color:#6a2a1a;letter-spacing:.08em;text-align:center}
   #locker .row{display:flex;align-items:center;gap:10px}
   #locker .rl{width:62px;font-size:14px;font-weight:800;color:#a0623a;letter-spacing:.1em}
-  #locker .sw{display:flex;gap:7px;flex-wrap:nowrap;flex:1;overflow-x:auto;padding:4px 2px 11px;scrollbar-width:none}
+  #locker .sw{display:flex;gap:6px;flex-wrap:nowrap;flex:1;overflow-x:auto;padding:3px 2px 9px;scrollbar-width:none}
   #locker .sw::-webkit-scrollbar{display:none}
   #locker .sw button{flex:none}
   #lkRows{display:flex;flex-direction:column;gap:2px}
@@ -66,10 +66,10 @@
     box-shadow:0 4px 0 rgba(106,42,26,.35);font-family:inherit;font-size:10px;font-weight:800;color:#6a2a1a;letter-spacing:.04em}
   #quick button svg{width:34px;height:34px;display:block}
   #quick button:active{transform:translateY(3px)}
-  #locker .sw button{width:38px;height:38px;border-radius:50%;border:3px solid rgba(0,0,0,.12);cursor:pointer;
+  #locker .sw button{width:34px;height:34px;border-radius:50%;border:3px solid rgba(0,0,0,.12);cursor:pointer;
     box-shadow:0 3px 0 rgba(0,0,0,.18)}
   #locker .sw button.on{border:4px solid #2b1410;transform:scale(1.08)}
-  #locker .sw button.hair{width:auto;height:42px;border-radius:14px;padding:0 12px;background:#fffdf6;
+  #locker .sw button.hair{width:auto;height:34px;border-radius:12px;padding:0 10px;background:#fffdf6;
     font-family:inherit;font-size:15px;font-weight:800;color:#5e3410;border-color:#e2c49a}
   #locker .sw button.hair.on{background:#2b1410;color:#fff;border-color:#2b1410}
   #fight{margin-top:4px;min-height:62px;border:0;border-radius:31px;font-family:inherit;font-size:30px;font-weight:800;
@@ -182,7 +182,8 @@
   /* landscape: sheets become a side panel on the right so the wrestler stays in view on the left */
   @media (min-aspect-ratio: 23/25){
     #locker,#home,.sheet{left:auto;right:16px;top:12px;bottom:12px;width:min(500px,50%);max-height:none;overflow:auto;
-      border-radius:26px;padding-bottom:16px;justify-content:center}
+      border-radius:26px;padding-bottom:16px;justify-content:safe center}
+    #fight,#hfight{position:sticky;bottom:0;flex:none}
   }
   @keyframes sway{from{transform:translateX(-24px)}to{transform:translateX(24px)}}
 </style>
@@ -1573,6 +1574,7 @@ function checkOut(dt) {
 
 // ------------------------------------------------------------- visuals
 var elTopBar = document.getElementById('top');
+var DRESS_DIR = new THREE.Vector3(0, 3.0, 7.0).normalize(), dressFit = { x: 0, y: 0, d: 8 };
 var dressK = 0, dressPos = new THREE.Vector3(), dressLook = new THREE.Vector3(), tmpCB = new THREE.Vector3(), tmpCL = new THREE.Vector3();
 function paint(dt) {
   // hand
@@ -1675,12 +1677,21 @@ function paint(dt) {
   // dressing camera: while a sheet is up, close in on your wrestler and lift him into the top of the screen
   var dress = elLocker.classList.contains('on') || elHome.classList.contains('on') || elDojo.classList.contains('on') || elBook.classList.contains('on');
   dressK += ((dress ? 1 : 0) - dressK) * Math.min(1, dt * 6);
-  var ds = 1 + CHANKO_SIZE * career.chanko;
-  var dd = VIEW.port ? 1 : 0.62;
-  dressPos.set(mitt.x, 3.0 * ds * dd, mitt.z + 7.0 * ds * dd);
-  dressLook.set(mitt.x, 0.95 * ds, mitt.z);
+  // fit him into whatever the open sheet leaves free (measured, so browser bars and phone sizes don't matter)
+  var openEl = elLocker.classList.contains('on') ? elLocker : elHome.classList.contains('on') ? elHome
+    : elDojo.classList.contains('on') ? elDojo : elBook.classList.contains('on') ? elBook : null;
+  if (openEl) {
+    var rc = openEl.getBoundingClientRect();
+    var freeW = VIEW.port ? VIEW.w : Math.max(120, rc.left), freeH = VIEW.port ? Math.max(120, rc.top) : VIEW.h;
+    dressFit.x = VIEW.w / 2 - freeW / 2; dressFit.y = VIEW.h / 2 - freeH * 0.5;
+    var ds = 1 + CHANKO_SIZE * career.chanko, tanh = Math.tan(cam.fov * 0.5 * DEG), hw = 2.5 * ds;
+    var dH = hw * VIEW.h / (0.78 * freeH * 2 * tanh), dW = hw * 1.15 * VIEW.w / (0.8 * freeW * 2 * tanh * cam.aspect);
+    dressFit.d = Math.max(dH, dW);
+    dressLook.set(mitt.x, 0.95 * ds, mitt.z);
+  }
+  dressPos.copy(DRESS_DIR).multiplyScalar(dressFit.d).add(dressLook);
   var cb = tmpCB.copy(camBase).lerp(dressPos, dressK), cl = tmpCL.copy(camLook).lerp(dressLook, dressK);
-  if (dressK > 0.002) cam.setViewOffset(VIEW.w, VIEW.h, VIEW.port ? 0 : VIEW.w * 0.25 * dressK, VIEW.port ? VIEW.h * 0.29 * dressK : 0, VIEW.w, VIEW.h);
+  if (dressK > 0.002) cam.setViewOffset(VIEW.w, VIEW.h, dressFit.x * dressK, dressFit.y * dressK, VIEW.w, VIEW.h);
   else if (cam.view && cam.view.enabled) cam.clearViewOffset();
   elTopBar.style.opacity = String(1 - dressK);
   camShake.amp = Math.max(0, camShake.amp - dt * 1.7);
