@@ -159,8 +159,8 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 var scene = new THREE.Scene();
-scene.background = new THREE.Color(0xf3d7b0);
-scene.fog = new THREE.Fog(0xeccaa0, 12, 34);
+scene.background = new THREE.Color(0xc98f5e);
+scene.fog = new THREE.Fog(0xcf9866, 13, 30);
 
 var cam = new THREE.PerspectiveCamera(46, 1, 0.1, 200);
 var camShake = { t: 0, amp: 0 };
@@ -170,7 +170,7 @@ var camShake = { t: 0, amp: 0 };
   var g = new THREE.SphereGeometry(90, 24, 16);
   var m = new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false, fog: false,
-    uniforms: { a: { value: new THREE.Color(0xfff6e6) }, b: { value: new THREE.Color(0xf3b985) } },
+    uniforms: { a: { value: new THREE.Color(0xe8b98a) }, b: { value: new THREE.Color(0xb97a4a) } },
     vertexShader: 'varying float h;void main(){h=normalize(position).y;' +
       'gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
     fragmentShader: 'uniform vec3 a;uniform vec3 b;varying float h;' +
@@ -205,6 +205,89 @@ function mat(col, opts) {
   });
 }
 
+function canvasTex(w, h, draw, rx, ry) {
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(c);
+  if (rx) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry || rx); }
+  t.anisotropy = 4;
+  return t;
+}
+function rnd(seed) { var s = seed; return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+function texMat(tex, tint) { var m = mat(tint === undefined ? 0xffffff : tint); m.map = tex; return m; }
+// packed clay of the ring top: speckle, broom arcs, a few hairline cracks
+var TEX_CLAY = canvasTex(512, 512, function (g, w, h) {
+  var R = rnd(7);
+  g.fillStyle = '#d8a26a'; g.fillRect(0, 0, w, h);
+  var gr = g.createRadialGradient(w / 2, h / 2, 40, w / 2, h / 2, w / 2);
+  gr.addColorStop(0, 'rgba(255,226,180,.35)'); gr.addColorStop(1, 'rgba(150,90,45,.30)');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 2600; i++) {
+    g.fillStyle = R() < 0.5 ? 'rgba(120,70,35,.16)' : 'rgba(255,235,200,.22)';
+    var s = 1 + R() * 2.2; g.fillRect(R() * w, R() * h, s, s);
+  }
+  g.lineWidth = 1.2;
+  for (var a = 0; a < 26; a++) {
+    var rr = 60 + R() * 180, a0 = R() * 6.28;
+    g.strokeStyle = 'rgba(140,85,45,' + (0.08 + R() * 0.08) + ')';
+    g.beginPath(); g.arc(w / 2, h / 2, rr, a0, a0 + 0.4 + R() * 0.9); g.stroke();
+  }
+  g.strokeStyle = 'rgba(105,58,28,.30)'; g.lineWidth = 1.4;
+  for (var c = 0; c < 9; c++) {
+    var x = R() * w, y = R() * h; g.beginPath(); g.moveTo(x, y);
+    for (var k = 0; k < 4; k++) { x += (R() - 0.5) * 46; y += (R() - 0.5) * 46; g.lineTo(x, y); }
+    g.stroke();
+  }
+});
+// the dohyo's earthen flank: strata + cracks, darker toward the bottom
+var TEX_EARTH = canvasTex(512, 256, function (g, w, h) {
+  var R = rnd(19);
+  var gr = g.createLinearGradient(0, 0, 0, h);
+  gr.addColorStop(0, '#b97a45'); gr.addColorStop(1, '#8a5530');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  for (var i = 0; i < 1400; i++) { g.fillStyle = 'rgba(70,35,15,' + R() * 0.18 + ')'; g.fillRect(R() * w, R() * h, 2, 2); }
+  g.strokeStyle = 'rgba(70,38,18,.35)'; g.lineWidth = 1.6;
+  for (var c = 0; c < 22; c++) {
+    var x = R() * w, y = R() * h; g.beginPath(); g.moveTo(x, y);
+    for (var k = 0; k < 3; k++) { x += (R() - 0.5) * 30; y += 8 + R() * 22; g.lineTo(x, y); }
+    g.stroke();
+  }
+}, 3, 1);
+// hall floor: long warm planks with seams and grain
+var TEX_WOOD = canvasTex(512, 512, function (g, w, h) {
+  var R = rnd(31), ph = 64;
+  for (var y = 0; y < h; y += ph) {
+    var off = R() * w;
+    for (var x = -off, l = 0; x < w; x += l) {
+      l = 200 + R() * 140; var t = R();
+      g.fillStyle = 'rgb(' + (196 + t * 22 | 0) + ',' + (140 + t * 18 | 0) + ',' + (88 + t * 14 | 0) + ')';
+      g.fillRect(x, y, l, ph);
+      g.strokeStyle = 'rgba(110,62,30,.12)'; g.lineWidth = 1;
+      for (var k = 0; k < 6; k++) { var gy = y + 6 + R() * (ph - 12); g.beginPath(); g.moveTo(x, gy); g.bezierCurveTo(x + l * 0.3, gy + (R() - 0.5) * 6, x + l * 0.7, gy + (R() - 0.5) * 6, x + l, gy); g.stroke(); }
+      g.fillStyle = 'rgba(95,52,24,.55)'; g.fillRect(x, y, 2, ph);
+    }
+    g.fillStyle = 'rgba(95,52,24,.55)'; g.fillRect(0, y, w, 2);
+  }
+}, 7, 7);
+// zabuton with a pale crest
+var TEX_CUSHION = canvasTex(128, 128, function (g, w, h) {
+  g.fillStyle = '#6b3f93'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#8d62b5'; g.lineWidth = 6; g.strokeRect(6, 6, w - 12, h - 12);
+  g.fillStyle = 'rgba(255,240,255,.55)';
+  for (var p = 0; p < 5; p++) { var a = p / 5 * 6.283 - 1.57; g.beginPath(); g.arc(w / 2 + Math.cos(a) * 15, h / 2 + Math.sin(a) * 15, 11, 0, 6.283); g.fill(); }
+  g.fillStyle = '#6b3f93'; g.beginPath(); g.arc(w / 2, h / 2, 7, 0, 6.283); g.fill();
+});
+// hanging banner at the back of the hall
+var TEX_BANNER = canvasTex(128, 256, function (g, w, h) {
+  var gr = g.createLinearGradient(0, 0, 0, h);
+  gr.addColorStop(0, '#5a2f80'); gr.addColorStop(1, '#43205f');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#f2e6ff';
+  for (var p = 0; p < 5; p++) { var a = p / 5 * 6.283 - 1.57; g.beginPath(); g.arc(w / 2 + Math.cos(a) * 20, 92 + Math.sin(a) * 20, 15, 0, 6.283); g.fill(); }
+  g.fillStyle = '#5a2f80'; g.beginPath(); g.arc(w / 2, 92, 10, 0, 6.283); g.fill();
+  g.fillStyle = '#d9b45a'; g.fillRect(0, 0, w, 10); g.fillRect(0, h - 14, w, 14);
+});
+
 var INK = new THREE.MeshBasicMaterial({ color: C.ink, side: THREE.BackSide });
 function ink(mesh, k) {
   var o = new THREE.Mesh(mesh.geometry, INK);
@@ -216,21 +299,23 @@ function ink(mesh, k) {
 var ringGroup = new THREE.Group();
 scene.add(ringGroup);
 (function () {
-  var top = new THREE.Mesh(new THREE.CylinderGeometry(RING_R, RING_R, 0.46, 56), mat(C.sandTop));
+  var top = new THREE.Mesh(new THREE.CylinderGeometry(RING_R, RING_R, 0.46, 56), [texMat(TEX_EARTH), texMat(TEX_CLAY), mat(C.sandSide)]);
   top.position.y = -0.23; top.receiveShadow = true;
   ringGroup.add(top);
-  var side = new THREE.Mesh(new THREE.CylinderGeometry(RING_R * 0.995, RING_R * 0.93, 0.9, 56), mat(C.sandSide));
+  var side = new THREE.Mesh(new THREE.CylinderGeometry(RING_R * 0.995, RING_R * 0.93, 0.9, 56), texMat(TEX_EARTH));
   side.position.y = -0.85;
   ringGroup.add(side);
-  var pil = new THREE.Mesh(new THREE.CylinderGeometry(RING_R * 0.72, RING_R * 1.05, 9, 32), mat(C.pillar));
+  var pil = new THREE.Mesh(new THREE.CylinderGeometry(RING_R * 0.72, RING_R * 1.05, 9, 32), texMat(TEX_EARTH, 0xd8b08a));
   pil.position.y = -5.8;
   ringGroup.add(pil);
   // the rope: the line you must shove them past
   ropeMat = mat(C.straw); bandMat = mat(C.strawDark);
-  var rope = new THREE.Mesh(new THREE.TorusGeometry(RING_R, 0.13, 10, 72), ropeMat);
+  var rope = new THREE.Mesh(new THREE.TorusGeometry(RING_R, 0.16, 10, 88), ropeMat);
+  var ropeInk = new THREE.Mesh(new THREE.TorusGeometry(RING_R, 0.19, 8, 88), INK);
+  ropeInk.rotation.x = Math.PI / 2; ropeInk.position.y = 0.06; ringGroup.add(ropeInk);
   rope.rotation.x = Math.PI / 2; rope.position.y = 0.06;
   ringGroup.add(rope);
-  var band = new THREE.BoxGeometry(0.05, 0.29, 0.29), bandM = bandMat;
+  var band = new THREE.BoxGeometry(0.05, 0.35, 0.35), bandM = bandMat;
   for (var bi = 0; bi < 44; bi++) {
     var ba = bi / 44 * Math.PI * 2, bm = new THREE.Mesh(band, bandM);
     bm.position.set(Math.cos(ba) * RING_R, 0.06, Math.sin(ba) * RING_R);
@@ -247,34 +332,60 @@ scene.add(ringGroup);
   ringGroup.add(inner);
 })();
 var crowdFolk = [];
+var R0 = rnd(77);
 (function () {
   var FLOOR_Y = -10;
-  var floor = new THREE.Mesh(new THREE.CylinderGeometry(40, 40, 0.4, 48), mat(C.floor));
+  // banners hanging all round the back of the hall
+  var bGeo = new THREE.PlaneGeometry(2.2, 4.4), bM = texMat(TEX_BANNER);
+  bM.side = THREE.DoubleSide;
+  for (var bi = 0; bi < 16; bi++) {
+    var ba = bi / 16 * Math.PI * 2, bn = new THREE.Mesh(bGeo, bM);
+    bn.position.set(Math.cos(ba) * 15.5, FLOOR_Y + 4.2, Math.sin(ba) * 15.5);
+    bn.lookAt(0, FLOOR_Y + 4.2, 0);
+    scene.add(bn);
+  }
+  var wall = new THREE.Mesh(new THREE.CylinderGeometry(16.2, 16.2, 12, 40, 1, true), mat(0x7a4a2c));
+  wall.material.side = THREE.BackSide; wall.position.y = FLOOR_Y + 5;
+  scene.add(wall);
+  var floor = new THREE.Mesh(new THREE.CylinderGeometry(40, 40, 0.4, 48), [mat(C.floor), texMat(TEX_WOOD), mat(C.floor)]);
+  floor.receiveShadow = false;
   floor.position.y = FLOOR_Y - 0.2;
   scene.add(floor);
   var kim = [0xf2c9a0, 0xe0a97c, 0xc98a5e, 0xf5d6b8];
-  var robe = [0x3d6fb3, 0xc94a4a, 0x4f9a6a, 0xe0a33a, 0x6a4a9a, 0xd87aa0];
+  var robe = [0x35558a, 0xa8443f, 0x3f7a58, 0xc98f35, 0x5a4380, 0xb86a86, 0x3b3b48];
   var cGeo = new THREE.BoxGeometry(1.0, 0.18, 1.0);
+  var cushM = texMat(TEX_CUSHION), hairM = mat(C.hair);
   for (var row = 0; row < 3; row++) {
     var rr = 8.6 + row * 1.7, n = 24 + row * 6;
     for (var i = 0; i < n; i++) {
       var a = (i + row * 0.5) / n * Math.PI * 2;
       var x = Math.cos(a) * rr, z = Math.sin(a) * rr, y = FLOOR_Y + row * 0.55;
-      var cu = new THREE.Mesh(cGeo, mat(C.cushion)); cu.position.set(x, y + 0.09, z); cu.rotation.y = -a; scene.add(cu);
+      var cu = new THREE.Mesh(cGeo, cushM); cu.position.set(x, y + 0.09, z); cu.rotation.y = -a; scene.add(cu);
       if ((i * 7 + row * 3) % 5 === 4) continue;      /* a few empty seats */
       var bd = new THREE.Mesh(GEO.sphLo, mat(robe[(i + row) % robe.length]));
-      bd.scale.set(0.42, 0.5, 0.42); bd.position.set(x, y + 0.6, z); scene.add(bd);
+      bd.scale.set(0.44, 0.46, 0.38); bd.position.set(x, y + 0.55, z); bd.rotation.y = -a; scene.add(bd);
       var hd = new THREE.Mesh(GEO.sphLo, mat(kim[(i * 3 + row) % kim.length]));
-      hd.scale.setScalar(0.26); hd.position.set(x, y + 1.25, z); scene.add(hd);
+      hd.scale.setScalar(0.25); hd.position.set(0, 1.45, 0.05);
+      bd.add(hd); hd.scale.set(0.25 / 0.44, 0.25 / 0.46, 0.25 / 0.38);
+      var hr = new THREE.Mesh(GEO.sphLo, hairM);
+      hr.scale.set(1.05, 0.62, 1.05); hr.position.set(0, 0.42, 0.18); hd.add(hr);
       crowdFolk.push({ bd: bd, hd: hd, h: ((i * 37 + row * 101) % 97) / 97 });
+      bd.userData.bob = R0() * 6.28; bd.userData.y0 = bd.position.y;
     }
   }
 })();
 
+function crowdIdle(t, excite) {
+  for (var i = 0; i < crowdFolk.length; i++) {
+    var b = crowdFolk[i].bd; if (!b.visible) continue;
+    var s = Math.max(0, Math.sin(t * (2.2 + excite * 7) + b.userData.bob));
+    b.position.y = b.userData.y0 + s * (0.04 + excite * 0.3);
+  }
+}
 // rank dressing: the rope warms toward gold and the stands fill up as you climb
 function dressRank(rank, of) {
   var k = rank / (of - 1);
-  ropeMat.color.set(C.straw).lerp(new THREE.Color(0xffc93a), k);
+  ropeMat.color.set(C.straw).lerp(new THREE.Color(0xf0bf48), k);
   bandMat.color.set(C.strawDark).lerp(new THREE.Color(rank >= 6 ? 0x7a2a8a : 0xb5431f), Math.min(1, k * 1.6));
   var fill = 0.25 + 0.75 * k;
   for (var i = 0; i < crowdFolk.length; i++) {
@@ -384,6 +495,16 @@ function buildFoe(r, col, skinCol) {
   brow.scale.set(r * 0.92, r * 0.10, r * 0.10);
   brow.position.set(0, r * 0.52, -r * 0.84);
   face.add(brow);
+  var mouth = new THREE.Mesh(GEO.sphLo, mat(0x5a1626));
+  mouth.scale.set(r * 0.17, r * 0.07, r * 0.06);
+  mouth.position.set(0, r * 0.02, -r * 0.92);
+  face.add(mouth);
+  for (var ck = -1; ck <= 1; ck += 2) {
+    var cheek = new THREE.Mesh(GEO.sphLo, mat(0xff8f8f, { transparent: true, opacity: 0.55 }));
+    cheek.scale.set(r * 0.15, r * 0.08, r * 0.06);
+    cheek.position.set(ck * r * 0.56, r * 0.10, -r * 0.78);
+    face.add(cheek);
+  }
   // topknot: a slicked cap of hair and the bun on top
   var cap = new THREE.Mesh(GEO.sph, mat(C.hair));
   cap.scale.set(r * 0.50, r * 0.22, r * 0.50);
@@ -403,7 +524,7 @@ function buildFoe(r, col, skinCol) {
   }
   g.userData.body = body; g.userData.belt = belt; g.userData.face = face;
   g.userData.brow = brow; g.userData.mat = m; g.userData.base = new THREE.Color(skin);
-  g.userData.arms = arms; g.userData.cap = cap; g.userData.bun = bun;
+  g.userData.arms = arms; g.userData.cap = cap; g.userData.bun = bun; g.userData.mouth = mouth;
   return g;
 }
 
@@ -796,6 +917,11 @@ function spawnOne() {
     var a = ang + (i - (T.n - 1) / 2) * 0.7;
     var rr = RING_R * 0.60;
     var o = buildFoe(T.r, T.col, T.skin);
+    if (RV) {
+      var gh = new THREE.Mesh(new THREE.RingGeometry(T.r * 1.08, T.r * 1.34, 32),
+        new THREE.MeshBasicMaterial({ color: 0xffc93a, transparent: true, opacity: 0.8, depthWrite: false }));
+      gh.rotation.x = -Math.PI / 2; gh.position.y = 0.03; o.add(gh);
+    }
     scene.add(o);
     foes.push({
       x: Math.cos(a) * rr, z: Math.sin(a) * rr, vx: 0, vz: 0,
@@ -824,6 +950,7 @@ function reset() {
   else banner(rankNow().name + ' \u00b7 BOUT ' + (career.bout + 1) + '/' + BOUTS, 'SHOVE ' + boutGoal() + ' OFF');
   elHint.style.opacity = '0';
   elOver.classList.remove('on');
+  puff(mitt.x, 1.4, mitt.z, 22, 0xffffff, 4.2, 0.07, -9);
   spawnOne();
 }
 
@@ -955,6 +1082,8 @@ function foeOff(f) {
   hud();
   if (G.phase === 'play' && boutDone()) boutWon();
   puff(f.x, 0.25, f.z, 16, C.dust, 5.2, 0.17);
+  wave(f.x, f.z, f.rival ? 0xffc93a : 0xfff2c4);
+  G.cheer = 1;
   puff(f.x, 0.5, f.z, 10, C.spark, 4.2, 0.13, -3);
   whump(0.55, 1500, 0.3);
   thud(130, 0.3, 0.42);
@@ -977,6 +1106,21 @@ function mittOff() {
   shake(0.46);
 }
 
+var waves = [];
+function wave(x, z, col) {
+  var m = new THREE.Mesh(new THREE.RingGeometry(0.6, 0.85, 40),
+    new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide }));
+  m.rotation.x = -Math.PI / 2; m.position.set(x, 0.05, z);
+  scene.add(m); waves.push({ m: m, t: 0 });
+}
+function stepWaves(dt) {
+  for (var i = waves.length - 1; i >= 0; i--) {
+    var w = waves[i]; w.t += dt;
+    var k = w.t / 0.45;
+    if (k >= 1) { scene.remove(w.m); w.m.geometry.dispose(); w.m.material.dispose(); waves.splice(i, 1); continue; }
+    w.m.scale.setScalar(1 + k * 2.6); w.m.material.opacity = 0.9 * (1 - k);
+  }
+}
 function shake(a) { camShake.amp = Math.max(camShake.amp, a); }
 
 function ai(dt) {
@@ -1098,6 +1242,10 @@ function paint(dt) {
     var f = foes[i];
     f.hit = Math.max(0, f.hit - dt * 3.4);
     var o = f.obj;
+    var mo = o.userData.mouth;
+    if (!f.alive || f.state === 'tipped') mo.scale.set(f.r * 0.13, f.r * 0.15, f.r * 0.06);
+    else if (f.state === 'wind' || f.state === 'charge') mo.scale.set(f.r * 0.24, f.r * 0.05, f.r * 0.06);
+    else mo.scale.set(f.r * 0.17, f.r * 0.06 + f.lean * f.r * 0.06, f.r * 0.06);
     if (!f.alive) {
       o.position.set(f.x + f.vx * 0.016, f.fy, f.z + f.vz * 0.016);
       f.x += f.vx * dt * 0.7; f.z += f.vz * dt * 0.7;
@@ -1178,6 +1326,9 @@ function paint(dt) {
   }
   stepParts(dt);
   stepPops(dt);
+  stepWaves(dt);
+  G.cheer = Math.max(0, (G.cheer || 0) - dt * 0.8);
+  crowdIdle(performance.now() / 1000, G.cheer);
 }
 
 // ------------------------------------------------------------- input
