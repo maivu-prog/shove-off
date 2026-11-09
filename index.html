@@ -113,13 +113,16 @@
   #home .dots .dot{border-color:#d9b48a;opacity:1}
   #home .dots .dot.w{background:#ffb02e;border-color:#c9801a}
   #home .dots .dot.l{background:#2b1410;border-color:#2b1410}
-  #home .heya{display:flex;gap:10px}
-  #home .card{flex:1;min-height:92px;border:3px solid #e2c49a;border-radius:18px;background:#fffdf6;padding:8px 10px;
-    font-family:inherit;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px;box-shadow:0 4px 0 #e2c49a}
+  #home .heya{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  #home .card{min-height:66px;border:3px solid #e2c49a;border-radius:18px;background:#fffdf6;padding:6px 8px;
+    font-family:inherit;text-align:left;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 4px 0 #e2c49a}
+  #home .card .ic{width:40px;height:40px;flex:none}
+  #home .card .ic svg{width:100%;height:100%;display:block}
+  #home .card .tx{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
   #home .card:active{transform:translateY(3px);box-shadow:0 1px 0 #e2c49a}
-  #home .card .t{font-size:17px;font-weight:800;color:#5e3410;letter-spacing:.04em}
-  #home .card .d{font-size:12px;font-weight:600;color:#a0623a;line-height:1.15}
-  #home .card .c{margin-top:auto;display:flex;align-items:center;gap:6px;font-size:20px;font-weight:800;color:#b5431f}
+  #home .card .t{font-size:15px;font-weight:800;color:#5e3410;letter-spacing:.03em;line-height:1.1}
+  #home .card .d{font-size:11px;font-weight:600;color:#a0623a;line-height:1.1}
+  #home .card .c{display:flex;align-items:center;gap:5px;font-size:17px;font-weight:800;color:#b5431f;line-height:1.1}
   #home .card .c .envi{width:18px;height:24px}
   #home .card .c .envi::after{top:8px;height:6px}
   #home .card.no .c{color:#c9a98a}
@@ -135,6 +138,36 @@
   #locker .lenv{position:absolute;right:18px;top:18px;display:flex;align-items:center;gap:6px;font-size:20px;font-weight:800;color:#b5431f}
   #locker .lenv .envi{width:18px;height:24px}
   #locker .lenv .envi::after{top:8px;height:6px}
+  .sheet{position:absolute;left:0;right:0;bottom:0;display:none;flex-direction:column;gap:8px;max-height:78%;overflow:auto;
+    padding:16px 16px calc(16px + env(safe-area-inset-bottom));pointer-events:auto;
+    background:linear-gradient(180deg,#fff6e8,#ffe2bd);border-radius:26px 26px 0 0;box-shadow:0 -10px 30px rgba(74,27,52,.28)}
+  .sheet.on{display:flex}
+  .sheet .ttl{font-size:24px;font-weight:800;color:#6a2a1a;letter-spacing:.08em;text-align:center}
+  .sheet .row{display:flex;align-items:center;gap:10px;background:#fffdf6;border:3px solid #e2c49a;border-radius:16px;padding:7px 10px}
+  .sheet .row .nm{font-size:17px;font-weight:800;color:#5e3410;letter-spacing:.04em}
+  .sheet .row .hw{font-size:12px;font-weight:600;color:#a0623a;line-height:1.2}
+  .sheet .row .gr{flex:1;min-width:0}
+  .sheet .buy{flex:none;min-width:72px;min-height:44px;border:0;border-radius:22px;font-family:inherit;font-size:17px;font-weight:800;
+    color:#5a3300;background:linear-gradient(180deg,#ffe493,#ffbe45);box-shadow:0 4px 0 #c9801a;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:5px}
+  .sheet .buy .envi{width:16px;height:21px}
+  .sheet .buy .envi::after{top:7px;height:5px}
+  .sheet .buy.no{background:#ecd9c2;color:#a8896a;box-shadow:0 4px 0 #cdb79c}
+  .sheet .buy.done{background:#3f9a58;color:#fff;box-shadow:0 4px 0 #2b6e3e;font-size:13px;padding:0 10px}
+  .sheet .buy.wait{background:transparent;box-shadow:none;color:#c9a98a;font-size:13px}
+  .sheet .back{min-height:52px;border:3px solid #c98a5e;border-radius:26px;background:transparent;font-family:inherit;
+    font-size:20px;font-weight:800;color:#8a4a22;letter-spacing:.06em;cursor:pointer;flex:none}
+  .frame{flex:none;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+    font-size:15px;font-weight:800;color:#fff;background:#d9c3a8;border:3px solid #c4a888}
+  .frame.f1{background:#c8834a;border-color:#8a5530}
+  .frame.f2{background:#b9c4cf;border-color:#7d8b98}
+  .frame.f3{background:#f6c344;border-color:#c9901a;box-shadow:0 0 10px rgba(246,195,68,.8)}
+  .bar{height:8px;border-radius:4px;background:#ecd9c2;overflow:hidden;margin-top:3px}
+  .bar i{display:block;height:100%;background:#ffb02e}
+  .rivs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .rivs span{border-radius:10px;padding:5px 2px;text-align:center;font-size:10px;font-weight:800;line-height:1.1;
+    background:#ecd9c2;color:#b39a7e;min-height:34px;display:flex;align-items:center;justify-content:center}
+  .rivs span.got{background:#2b1410;color:#ffd45a}
   @keyframes sway{from{transform:translateX(-24px)}to{transform:translateX(24px)}}
 </style>
 </head>
@@ -163,11 +196,17 @@
     <div class="pips" id="hpips"></div>
     <div class="hrow"><span class="hsub" id="hbasho">BASHO</span><span class="dots" id="hdots"></span></div>
     <div class="heya">
-      <button class="card" id="chanko"><span class="t" id="chT">CHANKO</span><span class="d">Eat up: heavier, shoved back less, shove harder</span><span class="c" id="chC"></span></button>
-      <button class="card" id="hlook"><span class="t">MY SUMO</span><span class="d">Belts and hair. New belts cost envelopes</span><span class="c" id="lkC"></span></button>
+      <button class="card" id="chanko"><span class="ic"><svg viewBox="0 0 40 40"><path d="M13 10c0-3 3-3 3-6M20 10c0-3 3-3 3-6M27 10c0-3 3-3 3-6" stroke="#d9b48a" stroke-width="2.5" fill="none" stroke-linecap="round"/><rect x="5" y="16" width="30" height="5" rx="2.5" fill="#8a3a22"/><circle cx="20" cy="14" r="3" fill="#8a3a22"/><path d="M7 21h26l-3 11a3 3 0 0 1-3 2H13a3 3 0 0 1-3-2z" fill="#2b1410"/><rect x="2" y="21" width="5" height="3" rx="1.5" fill="#2b1410"/><rect x="33" y="21" width="5" height="3" rx="1.5" fill="#2b1410"/></svg></span><span class="tx"><span class="t" id="chT">CHANKO</span><span class="d">heavier, harder to shove</span><span class="c" id="chC"></span></span></button>
+      <button class="card" id="hdojo"><span class="ic"><svg viewBox="0 0 40 40"><path d="M11 23V11a2.5 2.5 0 0 1 5 0v8V7a2.5 2.5 0 0 1 5 0v12V9a2.5 2.5 0 0 1 5 0v11v-5a2.5 2.5 0 0 1 5 0v10c0 7-5 12-11 12c-5 0-8-3-11-8l-4-7a2.5 2.5 0 0 1 4-3z" fill="#f2c49b" stroke="#2b1410" stroke-width="2.2" stroke-linejoin="round"/><path d="M3 9l4 3M2 16h5M4 23l4-2" stroke="#ffb02e" stroke-width="2.4" stroke-linecap="round"/></svg></span><span class="tx"><span class="t" id="djT">DOJO</span><span class="d" id="djD">learn a technique</span><span class="c" id="djC"></span></span></button>
+      <button class="card" id="hlook"><span class="ic"><svg viewBox="0 0 40 40"><circle cx="20" cy="23" r="13" fill="#f2c49b" stroke="#2b1410" stroke-width="2.2"/><path d="M8 20a12 10 0 0 1 24 0c-4-3-20-3-24 0z" fill="#2b1410"/><ellipse cx="20" cy="9" rx="4.2" ry="3.2" fill="#2b1410"/><path d="M13 20l5 2M27 20l-5 2" stroke="#2b1410" stroke-width="2.2" stroke-linecap="round"/><circle cx="15.5" cy="25" r="1.8" fill="#2b1410"/><circle cx="24.5" cy="25" r="1.8" fill="#2b1410"/><path d="M17 31q3 1.5 6 0" stroke="#2b1410" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span><span class="tx"><span class="t">MY SUMO</span><span class="d">belts and hair</span><span class="c" id="lkC"></span></span></button>
+      <button class="card" id="hbook"><span class="ic"><svg viewBox="0 0 40 40"><rect x="9" y="7" width="22" height="26" rx="2" fill="#fffaf0" stroke="#2b1410" stroke-width="2.2"/><rect x="6" y="4" width="28" height="5" rx="2.5" fill="#b5431f" stroke="#2b1410" stroke-width="2"/><rect x="6" y="31" width="28" height="5" rx="2.5" fill="#b5431f" stroke="#2b1410" stroke-width="2"/><circle cx="20" cy="16" r="4" fill="#f6c344" stroke="#2b1410" stroke-width="1.8"/><path d="M14 24h12M15 28h10" stroke="#a0623a" stroke-width="2.2" stroke-linecap="round"/></svg></span><span class="tx"><span class="t">RIVAL BOOK</span><span class="d" id="bkD">frames + rivals</span><span class="c" id="bkC"></span></span></button>
     </div>
     <button id="hfight">FIGHT!</button>
   </div>
+  <div class="sheet" id="dojo"><div class="ttl">DOJO</div><div id="dojoList"></div><button class="back" id="dojoBack">BACK</button></div>
+  <div class="sheet" id="book"><div class="ttl">RIVAL BOOK</div><div id="bookList"></div>
+    <div class="hw" style="font-size:13px;font-weight:800;color:#a0623a;letter-spacing:.1em">RIVALS BEATEN</div><div class="rivs" id="rivList"></div>
+    <button class="back" id="bookBack">BACK</button></div>
   <div id="locker">
     <div class="ttl">MY SUMO</div>
     <div class="lenv"><span class="envi"></span><span id="lenvn">0</span></div>
@@ -811,6 +850,7 @@ function stepPops(dt) {
 var chainTimer = 0;
 function showChain(txt) {
   elChain.textContent = txt;
+  elChain.style.fontSize = txt.length > 8 ? '42px' : '';
   elChain.classList.add('on');
   chainTimer = 0.85;
 }
@@ -900,6 +940,30 @@ var career = (function () {
   return { rank: 0, env: 0, bout: 0, res: [] };
 })();
 career.chanko = career.chanko || 0; career.owned = career.owned || [];
+career.tech = career.tech || []; career.book = career.book || {}; career.tier = career.tier || {}; career.rivals = career.rivals || [];
+// DOJO: each technique rides on a gesture the player already does (rule L2: no new buttons). Learned in order.
+var TECH = [
+  { k: 'tsuppari', name: 'TSUPPARI', how: '3 quick shoves on the same one', fx: 'it tips much faster', cost: 12 },
+  { k: 'hatakikomi', name: 'HATAKIKOMI', how: 'dodge a charge at the last moment', fx: 'it flies past you; +1 envelope if it goes out', cost: 20 },
+  { k: 'yorikiri', name: 'YORIKIRI', how: 'keep pushing one at the rope', fx: 'it loses its footing steadily', cost: 30 },
+  { k: 'uwatenage', name: 'UWATENAGE', how: 'shove a wobbling one from the side', fx: 'it spins away and bowls others over', cost: 45 }
+];
+function knows(k) { return career.tech.indexOf(k) >= 0; }
+// RIVAL BOOK: throws per wrestler type fill bronze / silver / gold frames, each paying envelopes once
+var BOOK_TYPES = [
+  { k: 'lug', name: 'LUG', hint: 'already off balance' }, { k: 'twins', name: 'TWINS', hint: 'shove one into the other' },
+  { k: 'charger', name: 'CHARGER', hint: 'dodge, then shove' }, { k: 'greaser', name: 'GREASER', hint: 'slippery both ways' },
+  { k: 'anchor', name: 'ANCHOR', hint: 'tip it before you push' }
+];
+var TIER_AT = [10, 40, 100], TIER_PAY = [3, 8, 15], TIER_NAME = ['BRONZE', 'SILVER', 'GOLD'];
+function bookThrow(f) {
+  var k = f.type, n = (career.book[k] || 0) + 1, t = career.tier[k] || 0;
+  career.book[k] = n;
+  if (t < 3 && n >= TIER_AT[t]) {
+    career.tier[k] = t + 1; career.env += TIER_PAY[t]; saveCareer(); hud();
+    pop(TIER_NAME[t] + ' ' + k.toUpperCase() + ' +' + TIER_PAY[t], f.x, 2.2, f.z, true); chime(1180, 0.22);
+  }
+}
 // CHANKO: the only stat in the heya. Mass only (collisions), never the finger spring (rule L1), capped.
 var CHANKO_COST = [6, 14, 26, 42, 64], CHANKO_MASS = 0.12, CHANKO_SIZE = 0.06;
 function playerMass() { return MITT_M0 * (1 + CHANKO_MASS * career.chanko); }
@@ -940,6 +1004,13 @@ function banner(a, b) {
   document.getElementById('ban1').textContent = a;
   document.getElementById('ban2').textContent = b;
   elBanner.classList.add('on'); bannerT = 1.6;
+}
+var techT = 0;
+function tech(name, f) {
+  if (G.t - techT < 0.6) return;                 /* one shout at a time */
+  techT = G.t;
+  showChain(name); chime(740, 0.2);
+  puff(f.x, 0.8, f.z, 10, C.spark, 3.6, 0.12, -4);
 }
 function boutWon() {
   G.phase = 'won'; G.wonT = 0;
@@ -1159,6 +1230,18 @@ function physics(dt) {
       fa.ctc += dt;
       if (add > 0) { fa.pend += add; fa.ldx = nx; fa.ldz = nz; }
       if (fa.ctc > 0.09 && fa.pend > 0) { fa.lean += fa.pend; fa.pend = 0; }
+      if (close > LEAN_THRESH && G.t - (fa.shoveT || -9) > 0.12) {
+        // TSUPPARI: a flurry on the same body
+        fa.tsu = G.t - (fa.shoveT || -9) < 0.55 ? (fa.tsu || 0) + 1 : 1;
+        fa.shoveT = G.t;
+        if (knows('tsuppari') && fa.tsu >= 3) { fa.lean += 0.38; fa.tsu = 0; tech('TSUPPARI!', fa); }
+        // UWATENAGE: a side-on shove into a body that is already wobbling
+        if (knows('uwatenage') && (fa.lean > 0.5 || fa.state === 'tipped') && align < 0.45 && G.t - (fa.uwaT || -9) > 1) {
+          fa.uwaT = G.t; fa.lean += 0.4;
+          fa.vx += nx * close * 0.55; fa.vz += nz * close * 0.55;
+          tech('UWATENAGE!', fa);
+        }
+      }
       if (fa.state === 'charge' && !fa.connected) {
         fa.connected = true;
         var kb = 0.45 * MITT_M0 / mitt.m;     /* a heavier wrestler is knocked back less */
@@ -1171,6 +1254,15 @@ function physics(dt) {
       frameHit = Math.max(frameHit, close);
     }
     else { fa.ctc = 0; fa.pend = 0; }
+    // YORIKIRI: keep leaning into one that is already near the rope
+    if (knows('yorikiri') && fa.state === 'stand') {
+      var gap = Math.hypot(fa.x - mitt.x, fa.z - mitt.z) - (mitt.r + fa.r);
+      var into = ((fa.x - mitt.x) * (mitt.tx - mitt.x) + (fa.z - mitt.z) * (mitt.tz - mitt.z)) > 0;
+      if (gap < 0.08 && into && Math.hypot(fa.x, fa.z) > RING_R * 0.6) {
+        fa.pushT = (fa.pushT || 0) + dt;
+        if (fa.pushT > 0.45) { fa.lean += 0.75 * dt; if (!fa.yori) { fa.yori = true; tech('YORIKIRI!', fa); } }
+      } else fa.pushT = 0;
+    }
     // re-plant: a gentle shove does nothing at all, it just digs in
     if (fa.state === 'stand' && fa.lean < 0.5) {
       var sp = Math.hypot(fa.vx, fa.vz);
@@ -1196,12 +1288,15 @@ function foeOff(f) {
   f.fvy = 2.4 + Math.random() * 1.4;
   f.spin = (Math.random() - 0.5) * 9;
   G.score++;
-  if (f.rival) { G.rivalLeft--; if (G.rivalLeft === 0) { showChain(rivalNow().name + ' DOWN!'); chime(990, 0.3); } }
+  if (f.rival) { G.rivalLeft--; if (G.rivalLeft === 0) { showChain(rivalNow().name + ' DOWN!'); chime(990, 0.3);
+    if (career.rivals.indexOf(career.rank) < 0) career.rivals.push(career.rank); } }
   hud();
   if (G.phase === 'play' && boutDone()) boutWon();
   puff(f.x, 0.25, f.z, 16, C.dust, 5.2, 0.17);
   wave(f.x, f.z, f.rival ? 0xffc93a : 0xfff2c4);
   G.cheer = 1;
+  bookThrow(f);
+  if (f.hatakiT !== undefined && G.t - f.hatakiT < 1.8) { career.env += 1; hud(); pop('+1', f.x, 2.0, f.z); }
   puff(f.x, 0.5, f.z, 10, C.spark, 4.2, 0.13, -3);
   whump(0.55, 1500, 0.3);
   thud(130, 0.3, 0.42);
@@ -1270,7 +1365,7 @@ function ai(dt) {
         var dx = mitt.x - f.x, dz = mitt.z - f.z, dl = Math.hypot(dx, dz) || 1;
         f.vx += (dx / dl) * f.spd; f.vz += (dz / dl) * f.spd;
         f.cdx = dx / dl; f.cdz = dz / dl;
-        f.state = 'charge'; f.stT = 0.55; f.connected = false;
+        f.state = 'charge'; f.stT = 0.55; f.connected = false; f.cdist = dl;
         grunt(0.34); whump(0.3, 600, 0.16);
         puff(f.x, 0.22, f.z, 10, C.dust, 4.4, 0.15);
       }
@@ -1284,6 +1379,10 @@ function ai(dt) {
         // whiffed it: a charge into thin air leaves it wide open
         if (!f.connected) {
           f.lean += 0.78;
+          if (knows('hatakikomi') && f.cdist < 3.0) {
+            f.lean += 0.5; f.vx += f.cdx * f.spd * 0.55; f.vz += f.cdz * f.spd * 0.55;
+            f.hatakiT = G.t; tech('HATAKIKOMI!', f);
+          }
           puff(f.x, 0.5, f.z, 6, C.spark, 2.6, 0.1, -4);
         }
       }
@@ -1565,17 +1664,72 @@ function renderHome() {
   document.getElementById('hdots').innerHTML = dotsHtml(career.res);
   document.getElementById('henv').textContent = String(career.env);
   var lv = career.chanko, cost = CHANKO_COST[lv], el = document.getElementById('chanko');
-  document.getElementById('chT').textContent = 'CHANKO \u00b7 LV ' + lv + '/' + CHANKO_COST.length;
+  document.getElementById('chT').textContent = 'CHANKO ' + lv + '/' + CHANKO_COST.length;
   el.className = 'card' + (cost === undefined ? ' max' : career.env < cost ? ' no' : ' glow');
   document.getElementById('chC').innerHTML = cost === undefined ? 'FULL' : '<span class="envi"></span>' + cost;
   var cheapest = null;
   for (var b = 0; b < LOOK_BELT.length; b++) if (!beltOwned(b) && (cheapest === null || BELT_PRICE[b] < cheapest)) cheapest = BELT_PRICE[b];
   document.getElementById('hlook').className = 'card' + (cheapest !== null && career.env >= cheapest ? ' glow' : '');
   document.getElementById('lkC').innerHTML = cheapest === null ? 'ALL OWNED' : 'FROM <span class="envi"></span>' + cheapest;
+  var nt = nextTech();
+  document.getElementById('djT').textContent = 'DOJO ' + career.tech.length + '/' + TECH.length;
+  document.getElementById('djD').textContent = nt ? 'next: ' + nt.name.toLowerCase() : 'all learned';
+  document.getElementById('djC').innerHTML = nt ? '<span class="envi"></span>' + nt.cost : 'MASTER';
+  document.getElementById('hdojo').className = 'card' + (!nt ? ' max' : career.env >= nt.cost ? ' glow' : ' no');
+  var fr = 0; for (var bk in career.tier) fr += career.tier[bk];
+  document.getElementById('bkD').textContent = 'frames ' + fr + '/' + BOOK_TYPES.length * 3;
+  document.getElementById('bkC').textContent = 'RIVALS ' + career.rivals.length + '/' + RIVALS.length;
 }
+function nextTech() { for (var i = 0; i < TECH.length; i++) if (!knows(TECH[i].k)) return TECH[i]; return null; }
+var elDojo = document.getElementById('dojo'), elBook = document.getElementById('book');
+function renderDojo() {
+  var h = '', nt = nextTech();
+  for (var i = 0; i < TECH.length; i++) {
+    var T = TECH[i], st = knows(T.k) ? 'done' : T !== nt ? 'wait' : career.env >= T.cost ? '' : 'no';
+    h += '<div class="row"><div class="gr"><div class="nm">' + T.name + '</div><div class="hw">' + T.how.toUpperCase() + ' \u2192 ' + T.fx + '</div></div>'
+      + '<button class="buy ' + st + '" data-t="' + T.k + '">' + (st === 'done' ? 'LEARNED' : st === 'wait' ? 'LATER' : '<span class="envi"></span>' + T.cost) + '</button></div>';
+  }
+  document.getElementById('dojoList').innerHTML = h;
+}
+function renderBook() {
+  var h = '';
+  for (var i = 0; i < BOOK_TYPES.length; i++) {
+    var B = BOOK_TYPES[i], n = career.book[B.k] || 0, t = career.tier[B.k] || 0;
+    var unlocked = false; for (var r = 0; r <= career.rank; r++) if (RANKS[r].pool.indexOf(B.k) >= 0) unlocked = true;
+    var nxt = t < 3 ? TIER_AT[t] : n, prev = t ? TIER_AT[t - 1] : 0;
+    var pct = t < 3 ? Math.min(100, (n - prev) / (nxt - prev) * 100) : 100;
+    h += '<div class="row"><div class="frame' + (t ? ' f' + t : '') + '">' + (unlocked ? n : '?') + '</div><div class="gr"><div class="nm">'
+      + (unlocked ? B.name : '???') + '</div><div class="hw">' + (unlocked ? B.hint.toUpperCase() + (t < 3 ? ' \u00b7 ' + TIER_NAME[t] + ' AT ' + nxt + ' (+' + TIER_PAY[t] + ')' : ' \u00b7 GOLD') : 'MEET IT HIGHER UP THE BANZUKE')
+      + '</div><div class="bar"><i style="width:' + (unlocked ? pct : 0) + '%"></i></div></div></div>';
+  }
+  document.getElementById('bookList').innerHTML = h;
+  var rv = '';
+  for (var j = 0; j < RIVALS.length; j++) rv += '<span class="' + (career.rivals.indexOf(j) >= 0 ? 'got' : '') + '">' + (career.rivals.indexOf(j) >= 0 ? RIVALS[j].name : '?') + '</span>';
+  document.getElementById('rivList').innerHTML = rv;
+}
+function sheet(el, on) { elHome.classList.toggle('on', !on); el.classList.toggle('on', on); if (!on) renderHome(); }
+document.getElementById('hdojo').addEventListener('click', function (e) { e.stopPropagation(); renderDojo(); sheet(elDojo, true); });
+document.getElementById('hbook').addEventListener('click', function (e) { e.stopPropagation(); renderBook(); sheet(elBook, true); });
+document.getElementById('dojoBack').addEventListener('click', function (e) { e.stopPropagation(); sheet(elDojo, false); });
+document.getElementById('bookBack').addEventListener('click', function (e) { e.stopPropagation(); sheet(elBook, false); });
+elDojo.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+elBook.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+elDojo.addEventListener('click', function (e) {
+  e.stopPropagation();
+  var b = e.target.closest ? e.target.closest('button[data-t]') : null;
+  if (!b) return;
+  var nt = nextTech();
+  if (!nt || nt.k !== b.getAttribute('data-t')) return;
+  if (career.env < nt.cost) { thud(120, 0.12, 0.2); return; }
+  career.env -= nt.cost; career.tech.push(nt.k); saveCareer(); hud();
+  showChain(nt.name); chime(660, 0.2); chime(990, 0.2);
+  puff(mitt.x, 1.2, mitt.z, 20, C.spark, 4.2, 0.1, -5); mitt.squash = 1;
+  renderDojo();
+});
 function openHome() {
   elLocker.classList.remove('on');
   openLocker(); elLocker.classList.remove('on');      /* same staging: wrestler in the middle facing you */
+  mitt.z = mitt.tz = -1.35;                      /* stand further back so the taller sheet never hides him */
   renderHome(); elHome.classList.add('on');
 }
 elHome.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
@@ -1697,6 +1851,8 @@ window.__toy = {
   reset: function () { reset(); G.phase = 'play'; },
   locker: function () { openLocker(); },
   home: function () { openHome(); },
+  dojo: function () { renderDojo(); sheet(elDojo, true); },
+  book: function () { renderBook(); sheet(elBook, true); },
   career: function () { return JSON.parse(JSON.stringify(career)); },
   setCareer: function (o) { for (var k in o) career[k] = o[k]; saveCareer(); reset(); G.phase = 'idle'; },
   endBout: function (win) { endBout(!!win); },
