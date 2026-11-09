@@ -451,68 +451,126 @@ function buildMitt() {
 }
 
 // ---------------------------------------------------------------- the foes
+// toon ramp: three flat bands of light so the wrestlers read as cartoon figures, not plastic
+var TOON_RAMP = (function () {
+  var d = new Uint8Array([92, 92, 92, 255, 150, 150, 150, 255, 182, 182, 182, 255]);   /* top band < 1: hemi light adds on top */
+  var t = new THREE.DataTexture(d, 3, 1, THREE.RGBAFormat);
+  t.minFilter = t.magFilter = THREE.NearestFilter; t.needsUpdate = true;
+  return t;
+})();
+function toon(col) { return new THREE.MeshToonMaterial({ color: col, gradientMap: TOON_RAMP }); }
+function darker(col, k) { return new THREE.Color(col).multiplyScalar(k).getHex(); }
+
+// Visual size only: the physics footprint stays the sphere of radius r.
+// Layout: round torso, a head sitting on it with the face toward -z, thick mawashi with a back knot and
+// a fringe of sagari in front, tsuppari arms ending in open palms, chonmage on top.
 function buildFoe(r, col, skinCol) {
   var g = new THREE.Group();
   var skin = skinCol || 0xf2c49b;
-  var m = mat(skin);
+  var m = toon(skin);
   var body = new THREE.Mesh(GEO.sph, m);
   body.scale.set(r, r * 0.93, r * 0.95);
   body.position.y = r * 0.90;
   body.castShadow = true;
   ink(body, 1.06);
   g.add(body);
+  // belly: a softer bulge low in front (in the torso's unit space so it squashes with it)
+  var belly = new THREE.Mesh(GEO.sph, m);
+  belly.scale.set(0.74, 0.66, 0.6); belly.position.set(0, -0.2, -0.46);
+  body.add(belly);
+  var navel = new THREE.Mesh(GEO.sphLo, mat(darker(skin, 0.6)));
+  navel.scale.set(0.05, 0.05, 0.03); navel.position.set(0, -0.1, -1.04);
+  body.add(navel);
   var arms = [];
   for (var ai = -1; ai <= 1; ai += 2) {
     var arm = new THREE.Mesh(GEO.sph, m);
     arms.push(arm);
-    arm.scale.set(r * 0.24, r * 0.22, r * 0.36);
-    arm.position.set(ai * r * 0.98, 0, -r * 0.22);
-    arm.rotation.y = ai * 0.35;
     ink(arm, 1.12);
     body.add(arm);
-    arm.scale.set(0.24, 0.24, 0.38);              /* in the body's unit space */
+    arm.scale.set(0.27, 0.27, 0.42);              /* in the body's unit space */
     arm.position.set(ai * 0.97, -0.05, -0.25);
+    var hand = new THREE.Mesh(GEO.sph, m);         /* open palm, pushed forward */
+    hand.scale.set(1.25, 1.1, 0.55); hand.position.set(0, 0.05, -1.05);
+    ink(hand, 1.1);
+    arm.add(hand);
   }
-  var belt = new THREE.Mesh(new THREE.TorusGeometry(r * 0.95, r * 0.19, 8, 22), mat(col));
+  // mawashi: thick band, big knot at the back, sagari strings hanging in front
+  var bm = toon(col), bmD = toon(darker(col, 0.72));
+  var belt = new THREE.Mesh(new THREE.TorusGeometry(r * 0.95, r * 0.23, 10, 26), bm);
   belt.rotation.x = Math.PI / 2;
   belt.position.y = r * 0.62;
   belt.castShadow = true;
   g.add(belt);
+  var knot = new THREE.Mesh(GEO.sph, bm);          /* torus local y = world +z (the back) */
+  knot.scale.set(r * 0.26, r * 0.2, r * 0.3); knot.position.set(0, r * 1.06, -r * 0.05);
+  ink(knot, 1.12);
+  belt.add(knot);
+  var sg = new THREE.CylinderGeometry(r * 0.035, r * 0.035, r * 0.42, 5);
+  for (var si = -3; si <= 3; si++) {
+    var str = new THREE.Mesh(sg, bmD);
+    var sa = -Math.PI / 2 + si * 0.16;
+    str.position.set(Math.cos(sa) * r * 1.13, Math.sin(sa) * r * 1.13, r * 0.2);
+    str.rotation.x = Math.PI / 2;
+    belt.add(str);
+  }
+  // head: sits on the torso, face toward -z
   var face = new THREE.Group();
   face.position.y = r * 0.90;
   g.add(face);
-  for (var s = -1; s <= 1; s += 2) {
-    var w = new THREE.Mesh(GEO.sphLo, mat(0xfff8ef));
-    w.scale.set(r * 0.23, r * 0.25, r * 0.17);
-    w.position.set(s * r * 0.33, r * 0.30, -r * 0.84);
-    face.add(w);
-    var p = new THREE.Mesh(GEO.sphLo, mat(0x3a1226));
-    p.scale.set(r * 0.115, r * 0.135, r * 0.10);
-    p.position.set(s * r * 0.33, r * 0.30, -r * 0.95);
-    face.add(p);
+  var H = r * 0.58, hy = r * 0.66, hz = -r * 0.16;
+  var head = new THREE.Mesh(GEO.sph, m);
+  head.scale.set(H, H * 0.96, H);
+  head.position.set(0, hy, hz);
+  head.castShadow = true;
+  ink(head, 1.07);
+  face.add(head);
+  for (var ei = -1; ei <= 1; ei += 2) {
+    var ear = new THREE.Mesh(GEO.sphLo, m);
+    ear.scale.set(r * 0.08, r * 0.13, r * 0.1); ear.position.set(ei * H * 0.98, hy, hz + r * 0.04);
+    face.add(ear);
   }
-  var brow = new THREE.Mesh(GEO.box, mat(0x3a1226));
-  brow.scale.set(r * 0.92, r * 0.10, r * 0.10);
-  brow.position.set(0, r * 0.52, -r * 0.84);
+  var fz = hz - H;                                   /* front surface of the head */
+  for (var s = -1; s <= 1; s += 2) {
+    var w = new THREE.Mesh(GEO.sphLo, mat(0xfffaf2));
+    w.scale.set(r * 0.15, r * 0.18, r * 0.07);
+    w.position.set(s * r * 0.2, hy + r * 0.1, fz + r * 0.075);
+    face.add(w);
+    var p = new THREE.Mesh(GEO.sphLo, mat(0x2a0f1c));
+    p.scale.set(r * 0.085, r * 0.11, r * 0.05);
+    p.position.set(s * r * 0.19, hy + r * 0.09, fz + r * 0.025);
+    face.add(p);
+    var gl = new THREE.Mesh(GEO.sphLo, mat(0xffffff));
+    gl.scale.setScalar(r * 0.028);
+    gl.position.set(s * r * 0.19 + r * 0.035, hy + r * 0.14, fz - r * 0.01);
+    face.add(gl);
+    var ck = new THREE.Mesh(GEO.sphLo, mat(0xff8f8f, { transparent: true, opacity: 0.6 }));
+    ck.scale.set(r * 0.1, r * 0.06, r * 0.04);
+    ck.position.set(s * r * 0.36, hy - r * 0.1, fz + r * 0.17);
+    face.add(ck);
+  }
+  // two thick brows angled down to the middle: every wrestler looks like he means it
+  var brow = new THREE.Group();
+  for (var bi = -1; bi <= 1; bi += 2) {
+    var bw = new THREE.Mesh(GEO.box, mat(C.hair));
+    bw.scale.set(r * 0.22, r * 0.065, r * 0.07);
+    bw.position.set(bi * r * 0.21, hy + r * 0.29, fz + r * 0.12);
+    bw.rotation.z = bi * 0.32;
+    brow.add(bw);
+  }
   face.add(brow);
   var mouth = new THREE.Mesh(GEO.sphLo, mat(0x5a1626));
   mouth.scale.set(r * 0.17, r * 0.07, r * 0.06);
-  mouth.position.set(0, r * 0.02, -r * 0.92);
+  mouth.position.set(0, hy - r * 0.1, fz + r * 0.035);
   face.add(mouth);
-  for (var ck = -1; ck <= 1; ck += 2) {
-    var cheek = new THREE.Mesh(GEO.sphLo, mat(0xff8f8f, { transparent: true, opacity: 0.55 }));
-    cheek.scale.set(r * 0.15, r * 0.08, r * 0.06);
-    cheek.position.set(ck * r * 0.56, r * 0.10, -r * 0.78);
-    face.add(cheek);
-  }
-  // topknot: a slicked cap of hair and the bun on top
-  var cap = new THREE.Mesh(GEO.sph, mat(C.hair));
-  cap.scale.set(r * 0.50, r * 0.22, r * 0.50);
-  cap.position.set(0, r * 0.80, r * 0.22);
+  // chonmage: slicked hair over the crown and back, the knot folded forward on top
+  var hm = toon(C.hair);
+  var cap = new THREE.Mesh(GEO.sph, hm);
+  cap.scale.set(H * 1.03, H * 0.62, H * 0.95);
+  cap.position.set(0, hy + H * 0.42, hz + H * 0.32);
   face.add(cap);
-  var bun = new THREE.Mesh(GEO.sph, mat(C.hair));
-  bun.scale.set(r * 0.20, r * 0.17, r * 0.30);
-  bun.position.set(0, r * 1.02, r * 0.26);
+  var bun = new THREE.Mesh(GEO.sph, hm);
+  bun.scale.set(r * 0.13, r * 0.11, r * 0.27);
+  bun.position.set(0, hy + H * 1.02, hz + H * 0.05);
   ink(bun, 1.15);
   face.add(bun);
   for (var s2 = -1; s2 <= 1; s2 += 2) {
@@ -525,6 +583,7 @@ function buildFoe(r, col, skinCol) {
   g.userData.body = body; g.userData.belt = belt; g.userData.face = face;
   g.userData.brow = brow; g.userData.mat = m; g.userData.base = new THREE.Color(skin);
   g.userData.arms = arms; g.userData.cap = cap; g.userData.bun = bun; g.userData.mouth = mouth;
+  g.userData.head = { y: hy, z: hz, H: H };
   return g;
 }
 
@@ -535,13 +594,13 @@ var LOOK_BELT = [0xd83a3a, 0x1fb3a6, 0x2f4f8f, 0xe8b52a, 0x2b2b2b, 0xf28fb8];
 var LOOK_HAIR = ['KNOT', 'FAN', 'BAND'];
 function buildPlayer(look) {
   var g = buildFoe(MITT_R, LOOK_BELT[look.belt], LOOK_SKIN[look.skin]);
-  var ud = g.userData;
+  var ud = g.userData, hd = ud.head;
   if (look.hair === 1) {                      /* oicho-mage: the fanned ginkgo-leaf knot */
-    ud.bun.scale.set(MITT_R * 0.42, MITT_R * 0.12, MITT_R * 0.22);
+    ud.bun.scale.set(MITT_R * 0.36, MITT_R * 0.1, MITT_R * 0.2);
   } else if (look.hair === 2) {               /* shaved head + headband in the belt colour */
     ud.cap.visible = false; ud.bun.visible = false;
-    var band = new THREE.Mesh(new THREE.TorusGeometry(MITT_R * 0.55, MITT_R * 0.09, 6, 20), mat(LOOK_BELT[look.belt]));
-    band.rotation.x = Math.PI / 2; band.position.y = MITT_R * 0.62;
+    var band = new THREE.Mesh(new THREE.TorusGeometry(hd.H * 0.98, MITT_R * 0.075, 6, 22), toon(LOOK_BELT[look.belt]));
+    band.rotation.x = Math.PI / 2; band.position.set(0, hd.y + hd.H * 0.32, hd.z);
     ud.face.add(band);
   }
   // a soft teal ring at the feet: "this one is you", same as the hand had
@@ -1233,7 +1292,7 @@ function paint(dt) {
   for (var ai2 = 0; ai2 < pud.arms.length; ai2++) {
     var side = ai2 ? 1 : -1, beat = Math.max(0, Math.sin(tt + ai2 * Math.PI)) * walk * 0.25;
     pud.arms[ai2].position.set(side * (0.97 - sq * 0.3), -0.05, -0.25 - sq * 0.55 - beat);
-    pud.arms[ai2].scale.set(0.24, 0.24, 0.38 + sq * 0.2);
+    pud.arms[ai2].scale.set(0.27, 0.27, 0.42 + sq * 0.22);
   }
 
   // foes
