@@ -61,7 +61,7 @@
   #lkMsg{min-height:16px;text-align:center;font-size:13px;font-weight:800;color:#b5431f;letter-spacing:.06em}
   #quick{position:absolute;right:16px;top:70px;display:none;flex-direction:column;gap:10px;pointer-events:auto}
   #quick.on{display:flex}
-  #quick button{width:58px;height:66px;border:3px solid #fff3e2;border-radius:18px;background:rgba(255,246,232,.92);cursor:pointer;
+  #quick button{width:66px;height:66px;border:3px solid #fff3e2;border-radius:18px;background:rgba(255,246,232,.92);cursor:pointer;
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:4px 0 2px;
     box-shadow:0 4px 0 rgba(106,42,26,.35);font-family:inherit;font-size:10px;font-weight:800;color:#6a2a1a;letter-spacing:.04em}
   #quick button svg{width:34px;height:34px;display:block}
@@ -185,6 +185,46 @@
       border-radius:26px;padding-bottom:16px;justify-content:safe center}
     #fight,#hfight{position:sticky;bottom:0;flex:none}
   }
+  /* HOME v2: two upgrade rows with their own colour + buy button, two navigation tiles with a chevron */
+  #home{gap:7px}
+  #home .hen{display:flex;flex-direction:column;align-items:flex-end}
+  #home .hen .hsub{font-size:10px}
+  #home .sec{font-size:11px;font-weight:800;color:#a0623a;letter-spacing:.18em;margin-top:3px}
+  #home .up{display:flex;align-items:center;gap:10px;border-radius:18px;padding:7px 9px;border:3px solid}
+  #home .up.chk{background:#fff1ea;border-color:#f3bba4}
+  #home .up.djo{background:#eaf8f5;border-color:#a6dfd5}
+  #home .up .ic{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+  #home .up.chk .ic{background:#ffd9c9}
+  #home .up.djo .ic{background:#c8efe8}
+  #home .up .ic svg{width:34px;height:34px;display:block}
+  #home .up .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+  #home .up .t{font-size:17px;font-weight:800;color:#5e3410;letter-spacing:.04em;line-height:1.1}
+  #home .up .d{font-size:12px;font-weight:600;color:#8a6a50;line-height:1.2}
+  #home .lv{display:flex;gap:4px;margin-top:4px}
+  #home .lv i{width:18px;height:6px;border-radius:3px;background:#e6d3bd}
+  #home .up.chk .lv i.on{background:#e0603a}
+  #home .up.djo .lv i.on{background:#1fb3a6}
+  #home .act{flex:none;min-width:80px;min-height:48px;border:0;border-radius:24px;font-family:inherit;font-size:16px;font-weight:800;
+    color:#fff;letter-spacing:.04em;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;padding:0 10px}
+  #home .act .pr{display:flex;align-items:center;gap:4px;font-size:14px}
+  #home .act .envi{width:13px;height:17px}
+  #home .act .envi::after{top:5px;height:5px}
+  #home .up.chk .act{background:#e0603a;box-shadow:0 4px 0 #a8401f}
+  #home .up.djo .act{background:#1fb3a6;box-shadow:0 4px 0 #12807a}
+  #home .act:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25) !important}
+  #home .up .act.no{background:#d9c6b0;box-shadow:0 4px 0 #b8a389;color:#fffaf2}
+  #home .up .act.max{background:transparent;box-shadow:none;color:#3f9a58;font-size:14px}
+  #home .up.ready{box-shadow:0 0 0 3px rgba(255,176,46,.55)}
+  #home .link{border:0;background:none;padding:2px 0 0;font-family:inherit;font-size:12px;font-weight:800;color:#12807a;
+    letter-spacing:.06em;text-align:left;cursor:pointer}
+  #home .navs{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  #home .nav{display:flex;align-items:center;gap:8px;min-height:52px;border:2px solid #e2c49a;border-radius:16px;background:#fffdf6;
+    padding:4px 8px;font-family:inherit;text-align:left;cursor:pointer}
+  #home .nav:active{background:#fff3e2}
+  #home .nav svg{width:32px;height:32px;flex:none}
+  #home .nav .t{font-size:14px;font-weight:800;color:#5e3410;display:block;line-height:1.1;letter-spacing:.03em}
+  #home .nav .d{font-size:11px;font-weight:600;color:#a0623a;display:block}
+  #home .nav .chev{margin-left:auto;font-size:26px;font-weight:800;color:#c98a5e;line-height:1}
   @keyframes sway{from{transform:translateX(-24px)}to{transform:translateX(24px)}}
 </style>
 </head>
@@ -194,7 +234,7 @@
   <div id="top"><div class="lbl" id="boutlbl">BOUT 1/5</div><div class="val" id="score">0</div><div class="dots" id="dots"></div>
     <div id="tr"><span class="envi"></span><span id="envn">0</span></div></div>
   <div id="rival"></div>
-  <div id="quick"><button id="qSumo"><svg viewBox="0 0 40 40"><circle cx="20" cy="23" r="13" fill="#f2c49b" stroke="#2b1410" stroke-width="2.2"/><path d="M8 20a12 10 0 0 1 24 0c-4-3-20-3-24 0z" fill="#2b1410"/><ellipse cx="20" cy="9" rx="4.2" ry="3.2" fill="#2b1410"/><path d="M13 20l5 2M27 20l-5 2" stroke="#2b1410" stroke-width="2.2" stroke-linecap="round"/><circle cx="15.5" cy="25" r="1.8" fill="#2b1410"/><circle cx="24.5" cy="25" r="1.8" fill="#2b1410"/><path d="M17 31q3 1.5 6 0" stroke="#2b1410" stroke-width="2" fill="none" stroke-linecap="round"/></svg>MY SUMO</button><button id="qHeya"><svg viewBox="0 0 40 40"><path d="M4 18L20 6l16 12" fill="none" stroke="#2b1410" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 17h24v16H8z" fill="#fffaf0" stroke="#2b1410" stroke-width="2.2"/><path d="M2 18q18-14 36 0" fill="#b5431f" stroke="#2b1410" stroke-width="2.2"/><rect x="16" y="22" width="8" height="11" fill="#8a3a22"/><circle cx="20" cy="27" r="2" fill="#f6c344"/></svg>HEYA</button></div>
+  <div id="quick"><button id="qSumo"><svg viewBox="0 0 40 40"><circle cx="20" cy="23" r="13" fill="#f2c49b" stroke="#2b1410" stroke-width="2.2"/><path d="M8 20a12 10 0 0 1 24 0c-4-3-20-3-24 0z" fill="#2b1410"/><ellipse cx="20" cy="9" rx="4.2" ry="3.2" fill="#2b1410"/><path d="M13 20l5 2M27 20l-5 2" stroke="#2b1410" stroke-width="2.2" stroke-linecap="round"/><circle cx="15.5" cy="25" r="1.8" fill="#2b1410"/><circle cx="24.5" cy="25" r="1.8" fill="#2b1410"/><path d="M17 31q3 1.5 6 0" stroke="#2b1410" stroke-width="2" fill="none" stroke-linecap="round"/></svg>MY SUMO</button><button id="qHeya"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="#ffb02e" stroke="#2b1410" stroke-width="2.2"/><path d="M20 29V12M12 19l8-8 8 8" fill="none" stroke="#2b1410" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>UPGRADES</button></div>
   <div id="banner"><div class="b1" id="ban1"></div><div class="b2" id="ban2"></div></div>
   <div id="chain"></div>
   <div id="edge"></div>
@@ -206,18 +246,24 @@
     <div id="ladder"><div class="pips" id="pips"></div><div class="rn" id="rn"></div></div>
     <div class="env" id="overenv"></div>
     <button id="again">AGAIN</button>
-    <button id="custom">HEYA</button>
+    <button id="custom">UPGRADES</button>
   </div>
   <div id="home">
     <div class="hrow"><div><div class="hsub" id="hsub">RANK 1/10</div><div class="hrk" id="hrk">JONOKUCHI</div></div>
-      <div class="henv"><span class="envi"></span><span id="henv">0</span></div></div>
+      <div class="hen"><div class="henv"><span class="envi"></span><span id="henv">0</span></div><div class="hsub">ENVELOPES</div></div></div>
     <div class="pips" id="hpips"></div>
-    <div class="hrow"><span class="hsub" id="hbasho">BASHO</span><span class="dots" id="hdots"></span></div>
-    <div class="heya">
-      <button class="card" id="chanko"><span class="ic"><svg viewBox="0 0 40 40"><path d="M13 10c0-3 3-3 3-6M20 10c0-3 3-3 3-6M27 10c0-3 3-3 3-6" stroke="#d9b48a" stroke-width="2.5" fill="none" stroke-linecap="round"/><rect x="5" y="16" width="30" height="5" rx="2.5" fill="#8a3a22"/><circle cx="20" cy="14" r="3" fill="#8a3a22"/><path d="M7 21h26l-3 11a3 3 0 0 1-3 2H13a3 3 0 0 1-3-2z" fill="#2b1410"/><rect x="2" y="21" width="5" height="3" rx="1.5" fill="#2b1410"/><rect x="33" y="21" width="5" height="3" rx="1.5" fill="#2b1410"/></svg></span><span class="tx"><span class="t" id="chT">CHANKO</span><span class="d">heavier, harder to shove</span><span class="c" id="chC"></span></span></button>
-      <button class="card" id="hdojo"><span class="ic"><svg viewBox="0 0 40 40"><path d="M11 23V11a2.5 2.5 0 0 1 5 0v8V7a2.5 2.5 0 0 1 5 0v12V9a2.5 2.5 0 0 1 5 0v11v-5a2.5 2.5 0 0 1 5 0v10c0 7-5 12-11 12c-5 0-8-3-11-8l-4-7a2.5 2.5 0 0 1 4-3z" fill="#f2c49b" stroke="#2b1410" stroke-width="2.2" stroke-linejoin="round"/><path d="M3 9l4 3M2 16h5M4 23l4-2" stroke="#ffb02e" stroke-width="2.4" stroke-linecap="round"/></svg></span><span class="tx"><span class="t" id="djT">DOJO</span><span class="d" id="djD">learn a technique</span><span class="c" id="djC"></span></span></button>
-      <button class="card" id="hlook"><span class="ic"><svg viewBox="0 0 40 40"><circle cx="20" cy="23" r="13" fill="#f2c49b" stroke="#2b1410" stroke-width="2.2"/><path d="M8 20a12 10 0 0 1 24 0c-4-3-20-3-24 0z" fill="#2b1410"/><ellipse cx="20" cy="9" rx="4.2" ry="3.2" fill="#2b1410"/><path d="M13 20l5 2M27 20l-5 2" stroke="#2b1410" stroke-width="2.2" stroke-linecap="round"/><circle cx="15.5" cy="25" r="1.8" fill="#2b1410"/><circle cx="24.5" cy="25" r="1.8" fill="#2b1410"/><path d="M17 31q3 1.5 6 0" stroke="#2b1410" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span><span class="tx"><span class="t">MY SUMO</span><span class="d">belts and hair</span><span class="c" id="lkC"></span></span></button>
-      <button class="card" id="hbook"><span class="ic"><svg viewBox="0 0 40 40"><rect x="9" y="7" width="22" height="26" rx="2" fill="#fffaf0" stroke="#2b1410" stroke-width="2.2"/><rect x="6" y="4" width="28" height="5" rx="2.5" fill="#b5431f" stroke="#2b1410" stroke-width="2"/><rect x="6" y="31" width="28" height="5" rx="2.5" fill="#b5431f" stroke="#2b1410" stroke-width="2"/><circle cx="20" cy="16" r="4" fill="#f6c344" stroke="#2b1410" stroke-width="1.8"/><path d="M14 24h12M15 28h10" stroke="#a0623a" stroke-width="2.2" stroke-linecap="round"/></svg></span><span class="tx"><span class="t">RIVAL BOOK</span><span class="d" id="bkD">frames + rivals</span><span class="c" id="bkC"></span></span></button>
+    <div class="hrow"><span class="hsub" id="hbasho">THIS BASHO</span><span class="dots" id="hdots"></span></div>
+    <div class="sec">GET STRONGER</div>
+    <div class="up chk"><span class="ic"><svg viewBox="0 0 40 40"><path d="M13 10c0-3 3-3 3-6M20 10c0-3 3-3 3-6M27 10c0-3 3-3 3-6" stroke="#c9a07a" stroke-width="2.5" fill="none" stroke-linecap="round"/><rect x="5" y="16" width="30" height="5" rx="2.5" fill="#8a3a22"/><circle cx="20" cy="14" r="3" fill="#8a3a22"/><path d="M7 21h26l-3 11a3 3 0 0 1-3 2H13a3 3 0 0 1-3-2z" fill="#2b1410"/><rect x="2" y="21" width="5" height="3" rx="1.5" fill="#2b1410"/><rect x="33" y="21" width="5" height="3" rx="1.5" fill="#2b1410"/></svg></span>
+      <span class="tx"><span class="t">CHANKO</span><span class="d">Heavier: shoved back less, shoves harder</span><span class="lv" id="chLv"></span></span>
+      <button class="act" id="chBuy"></button></div>
+    <div class="up djo"><span class="ic"><svg viewBox="0 0 40 40"><path d="M11 23V11a2.5 2.5 0 0 1 5 0v8V7a2.5 2.5 0 0 1 5 0v12V9a2.5 2.5 0 0 1 5 0v11v-5a2.5 2.5 0 0 1 5 0v10c0 7-5 12-11 12c-5 0-8-3-11-8l-4-7a2.5 2.5 0 0 1 4-3z" fill="#f2c49b" stroke="#2b1410" stroke-width="2.2" stroke-linejoin="round"/><path d="M3 9l4 3M2 16h5M4 23l4-2" stroke="#e0603a" stroke-width="2.4" stroke-linecap="round"/></svg></span>
+      <span class="tx"><span class="t">DOJO</span><span class="d" id="djD"></span><span class="lv" id="djLv"></span></span>
+      <button class="act" id="djBuy"></button></div>
+    <div class="sec">COLLECTION</div>
+    <div class="navs">
+      <button class="nav" id="hlook"><svg viewBox="0 0 40 40"><circle cx="20" cy="23" r="13" fill="#f2c49b" stroke="#2b1410" stroke-width="2.2"/><path d="M8 20a12 10 0 0 1 24 0c-4-3-20-3-24 0z" fill="#2b1410"/><ellipse cx="20" cy="9" rx="4.2" ry="3.2" fill="#2b1410"/><path d="M13 20l5 2M27 20l-5 2" stroke="#2b1410" stroke-width="2.2" stroke-linecap="round"/><circle cx="15.5" cy="25" r="1.8" fill="#2b1410"/><circle cx="24.5" cy="25" r="1.8" fill="#2b1410"/><path d="M17 31q3 1.5 6 0" stroke="#2b1410" stroke-width="2" fill="none" stroke-linecap="round"/></svg><span><span class="t">MY SUMO</span><span class="d" id="lkD">dress up</span></span><span class="chev">&#8250;</span></button>
+      <button class="nav" id="hbook"><svg viewBox="0 0 40 40"><rect x="9" y="7" width="22" height="26" rx="2" fill="#fffaf0" stroke="#2b1410" stroke-width="2.2"/><rect x="6" y="4" width="28" height="5" rx="2.5" fill="#b5431f" stroke="#2b1410" stroke-width="2"/><rect x="6" y="31" width="28" height="5" rx="2.5" fill="#b5431f" stroke="#2b1410" stroke-width="2"/><circle cx="20" cy="16" r="4" fill="#f6c344" stroke="#2b1410" stroke-width="1.8"/><path d="M14 24h12M15 28h10" stroke="#a0623a" stroke-width="2.2" stroke-linecap="round"/></svg><span><span class="t">RIVAL BOOK</span><span class="d" id="bkD">frames</span></span><span class="chev">&#8250;</span></button>
     </div>
     <button id="hfight">FIGHT!</button>
   </div>
@@ -1209,7 +1255,7 @@ function setLook(k, v) {
   mittObj = buildPlayer(look);
   mittObj.position.copy(p); mittObj.rotation.y = ry;
   scene.add(mittObj);
-  renderLocker();
+  lockerSync();
 }
 var MITT_M0 = 2.1;
 var mitt = { x: 0, z: 1.25, vx: 0, vz: 0, r: MITT_R, m: MITT_M0, tx: 0, tz: 1.25, yaw: 0, squash: 0, y: 0, vy: 0, lastHit: -9 };
@@ -1775,6 +1821,15 @@ elAgain.addEventListener('click', function (e) {
 // MY SUMO: opens before the first bout and from the loss screen. Nothing here changes how it plays.
 var elLocker = document.getElementById('locker');
 function hexCss(h) { return '#' + ('000000' + h.toString(16)).slice(-6); }
+function lockerSync() {
+  var bs = document.querySelectorAll('#lkRows button[data-k]');
+  for (var i = 0; i < bs.length; i++) {
+    var b = bs[i], k = b.getAttribute('data-k'), v = +b.getAttribute('data-v'), own = lookOwned(k, v);
+    b.classList.toggle('on', (look[k] | 0) === v); b.classList.toggle('lock', !own);
+    var sp = b.querySelector('span'); if (own && sp) sp.remove();
+  }
+  document.getElementById('lenvn').textContent = String(career.env);
+}
 function renderLocker() {
   var h = '';
   for (var r = 0; r < LOOK_ROWS.length; r++) {
@@ -1788,9 +1843,15 @@ function renderLocker() {
     h += '</div></div>';
   }
   document.getElementById('lkRows').innerHTML = h;
+  // open each row scrolled to what is currently worn
+  var on = document.querySelectorAll('#lkRows button.on');
+  for (var oi = 0; oi < on.length; oi++) on[oi].parentNode.scrollLeft = Math.max(0, on[oi].offsetLeft - on[oi].parentNode.offsetLeft - 40);
   document.getElementById('lenvn').textContent = String(career.env);
 }
-function openLocker() {
+var lockerFrom = 'first';
+function openLocker(from) {
+  lockerFrom = from || 'ring';
+  document.getElementById('fight').textContent = lockerFrom === 'first' ? 'FIGHT!' : 'DONE';
   elOver.classList.remove('on');
   reset(); G.phase = 'idle';
   elHint.style.opacity = '0';
@@ -1822,6 +1883,7 @@ elLocker.addEventListener('click', function (e) {
 document.getElementById('fight').addEventListener('click', function (e) {
   e.stopPropagation();
   elLocker.classList.remove('on');
+  if (lockerFrom === 'home') { renderHome(); elHome.classList.add('on'); return; }
   reset(); G.phase = 'idle';
   elHint.style.opacity = '1';
   try { localStorage.setItem('shoveoff.seen', '1'); } catch (x) {}
@@ -1835,29 +1897,39 @@ function renderHome() {
     + (career.rank < RANKS.length - 1 ? ' \u00b7 NEXT ' + RANKS[career.rank + 1].name : ' \u00b7 TOP OF THE BANZUKE');
   for (var i = 0; i < RANKS.length; i++) h += '<span class="pip' + (i < career.rank ? ' done' : i === career.rank ? ' now' : '') + '"></span>';
   document.getElementById('hpips').innerHTML = h;
-  document.getElementById('hbasho').textContent = 'BASHO \u00b7 BOUT ' + (career.bout + 1) + '/' + BOUTS;
+  var w = 0; for (var ri = 0; ri < career.res.length; ri++) w += career.res[ri];
+  document.getElementById('hbasho').textContent = 'THIS BASHO \u00b7 ' + w + '\u2013' + (career.res.length - w);
   document.getElementById('hdots').innerHTML = dotsHtml(career.res);
   document.getElementById('henv').textContent = String(career.env);
-  var lv = career.chanko, cost = CHANKO_COST[lv], el = document.getElementById('chanko');
-  document.getElementById('chT').textContent = 'CHANKO ' + lv + '/' + CHANKO_COST.length;
-  el.className = 'card' + (cost === undefined ? ' max' : career.env < cost ? ' no' : ' glow');
-  document.getElementById('chC').innerHTML = cost === undefined ? 'FULL' : '<span class="envi"></span>' + cost;
-  var cheapest = null;
+  document.getElementById('hfight').textContent = 'FIGHT \u00b7 BOUT ' + (career.bout + 1) + '/' + BOUTS;
+  var lvBar = function (n, of) { var s = ''; for (var k = 0; k < of; k++) s += '<i class="' + (k < n ? 'on' : '') + '"></i>'; return s; };
+  var price = function (verb, c) { return '<span>' + verb + '</span><span class="pr"><span class="envi"></span>' + c + '</span>'; };
+  // CHANKO
+  var lv = career.chanko, cost = CHANKO_COST[lv], cb = document.getElementById('chBuy');
+  document.getElementById('chLv').innerHTML = lvBar(lv, CHANKO_COST.length);
+  cb.className = 'act' + (cost === undefined ? ' max' : career.env < cost ? ' no' : '');
+  cb.innerHTML = cost === undefined ? 'FULL' : price('EAT', cost);
+  cb.parentNode.classList.toggle('ready', cost !== undefined && career.env >= cost);
+  // DOJO
+  var nt = nextTech(), db = document.getElementById('djBuy');
+  document.getElementById('djLv').innerHTML = lvBar(career.tech.length, TECH.length);
+  document.getElementById('djD').innerHTML = (nt ? 'Next: <b>' + nt.name + '</b> \u2013 ' + nt.how : 'Every technique learned')
+    + '<br><button class="link" id="djAll">ALL TECHNIQUES &#8250;</button>';
+  db.className = 'act' + (!nt ? ' max' : career.env < nt.cost ? ' no' : '');
+  db.innerHTML = !nt ? 'MASTER' : price('LEARN', nt.cost);
+  db.parentNode.classList.toggle('ready', !!nt && career.env >= nt.cost);
+  // COLLECTION
+  var cheapest = null, owned = 0, total = 0;
   for (var lr = 0; lr < LOOK_ROWS.length; lr++) {
     var LR = LOOK_ROWS[lr];
-    for (var b = 0; b < LR.list.length; b++)
-      if (!lookOwned(LR.k, b) && rankOk(LR, b) && (cheapest === null || LR.price[b] < cheapest)) cheapest = LR.price[b];
+    for (var b = 0; b < LR.list.length; b++) {
+      total++; if (lookOwned(LR.k, b)) owned++;
+      else if (rankOk(LR, b) && (cheapest === null || LR.price[b] < cheapest)) cheapest = LR.price[b];
+    }
   }
-  document.getElementById('hlook').className = 'card' + (cheapest !== null && career.env >= cheapest ? ' glow' : '');
-  document.getElementById('lkC').innerHTML = cheapest === null ? 'ALL OWNED' : 'FROM <span class="envi"></span>' + cheapest;
-  var nt = nextTech();
-  document.getElementById('djT').textContent = 'DOJO ' + career.tech.length + '/' + TECH.length;
-  document.getElementById('djD').textContent = nt ? 'next: ' + nt.name.toLowerCase() : 'all learned';
-  document.getElementById('djC').innerHTML = nt ? '<span class="envi"></span>' + nt.cost : 'MASTER';
-  document.getElementById('hdojo').className = 'card' + (!nt ? ' max' : career.env >= nt.cost ? ' glow' : ' no');
+  document.getElementById('lkD').textContent = owned + '/' + total + ' items';
   var fr = 0; for (var bk in career.tier) fr += career.tier[bk];
-  document.getElementById('bkD').textContent = 'frames ' + fr + '/' + BOOK_TYPES.length * 3;
-  document.getElementById('bkC').textContent = 'RIVALS ' + career.rivals.length + '/' + RIVALS.length;
+  document.getElementById('bkD').textContent = fr + '/' + BOOK_TYPES.length * 3 + ' frames \u00b7 ' + career.rivals.length + ' rivals';
 }
 function nextTech() { for (var i = 0; i < TECH.length; i++) if (!knows(TECH[i].k)) return TECH[i]; return null; }
 var elDojo = document.getElementById('dojo'), elBook = document.getElementById('book');
@@ -1887,7 +1959,19 @@ function renderBook() {
   document.getElementById('rivList').innerHTML = rv;
 }
 function sheet(el, on) { elHome.classList.toggle('on', !on); el.classList.toggle('on', on); if (!on) renderHome(); }
-document.getElementById('hdojo').addEventListener('click', function (e) { e.stopPropagation(); renderDojo(); sheet(elDojo, true); });
+document.getElementById('djBuy').addEventListener('click', function (e) {
+  e.stopPropagation();
+  var nt = nextTech();
+  if (!nt) return;
+  if (career.env < nt.cost) { thud(120, 0.12, 0.2); return; }
+  career.env -= nt.cost; career.tech.push(nt.k); saveCareer(); hud();
+  showChain(nt.name); chime(660, 0.2); chime(990, 0.2);
+  puff(mitt.x, 1.2, mitt.z, 20, C.spark, 4.2, 0.1, -5); mitt.squash = 1;
+  renderHome();
+});
+elHome.addEventListener('click', function (e) {
+  if (e.target && e.target.id === 'djAll') { e.stopPropagation(); renderDojo(); sheet(elDojo, true); }
+});
 document.getElementById('hbook').addEventListener('click', function (e) { e.stopPropagation(); renderBook(); sheet(elBook, true); });
 document.getElementById('dojoBack').addEventListener('click', function (e) { e.stopPropagation(); sheet(elDojo, false); });
 document.getElementById('bookBack').addEventListener('click', function (e) { e.stopPropagation(); sheet(elBook, false); });
@@ -1911,7 +1995,7 @@ function openHome() {
   renderHome(); elHome.classList.add('on');
 }
 elHome.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
-document.getElementById('chanko').addEventListener('click', function (e) {
+document.getElementById('chBuy').addEventListener('click', function (e) {
   e.stopPropagation();
   var cost = CHANKO_COST[career.chanko];
   if (cost === undefined) return;
@@ -1922,7 +2006,7 @@ document.getElementById('chanko').addEventListener('click', function (e) {
   thud(90, 0.3, 0.4); chime(660, 0.2); chime(990, 0.18);
   renderHome();
 });
-document.getElementById('hlook').addEventListener('click', function (e) { e.stopPropagation(); elHome.classList.remove('on'); openLocker(); });
+document.getElementById('hlook').addEventListener('click', function (e) { e.stopPropagation(); elHome.classList.remove('on'); openLocker('home'); });
 document.getElementById('hfight').addEventListener('click', function (e) {
   e.stopPropagation();
   elHome.classList.remove('on');
@@ -2071,7 +2155,7 @@ reset();
 G.phase = 'idle';
 (function () {
   var seen = false; try { seen = !!localStorage.getItem('shoveoff.seen'); } catch (x) {}
-  if (!seen && !/nolocker/.test(location.search) && !navigator.webdriver) openLocker();
+  if (!seen && !/nolocker/.test(location.search) && !navigator.webdriver) openLocker('first');
 })();
 if (!elHome.classList.contains('on') && !elLocker.classList.contains('on')) elHint.style.opacity = '1';
 requestAnimationFrame(tick);
