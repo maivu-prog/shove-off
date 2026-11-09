@@ -1,5 +1,5 @@
 # shove-off
 
-Shove Off - a 3-minute toy: one verb, SHOVE
+Shove Off: sumo - shove the wrestlers off the dohyo
 
 Play: https://maivu-prog.github.io/shove-off/
