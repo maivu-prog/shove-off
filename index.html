@@ -67,19 +67,42 @@
   #fight:active{transform:translateY(4px);box-shadow:0 2px 0 #c9801a}
   #custom{pointer-events:auto;min-height:48px;padding:0 28px;border:3px solid #fff3e2;border-radius:24px;background:transparent;
     font-family:inherit;font-size:20px;font-weight:800;color:#fff3e2;letter-spacing:.06em;cursor:pointer}
+  /* basho HUD: white star = win, black star = loss (as on a real banzuke), envelopes top right */
+  .dots{display:flex;gap:6px;margin-top:6px}
+  .dot{width:15px;height:15px;border-radius:50%;border:2.5px solid #fff;opacity:.55}
+  .dot.w{background:#fff;opacity:1}
+  .dot.l{background:#2b1410;opacity:1}
+  #over .dots{justify-content:center;gap:10px}
+  #over .dot{width:26px;height:26px;border-width:3.5px}
+  #tr{position:absolute;right:22px;top:14px;display:flex;align-items:center;gap:8px;
+    font-size:30px;font-weight:800;color:#fff;text-shadow:0 3px 0 #b5431f,0 5px 12px rgba(60,18,40,.45)}
+  .envi{display:inline-block;width:26px;height:34px;border-radius:3px;background:#fffaf0;position:relative;
+    box-shadow:0 2px 0 rgba(0,0,0,.25)}
+  .envi::after{content:'';position:absolute;left:0;right:0;top:11px;height:9px;background:#d83a3a}
+  #over .env{font-size:26px;font-weight:800;color:#ffe493;display:flex;align-items:center;gap:8px;
+    text-shadow:0 3px 0 #b5431f}
+  #banner{position:absolute;left:0;right:0;top:25%;text-align:center;opacity:0;transform:translateY(10px);
+    transition:opacity .25s,transform .25s}
+  #banner.on{opacity:1;transform:none}
+  #banner .b1{font-size:20px;font-weight:600;color:#fff0e2;letter-spacing:.22em;text-shadow:0 2px 4px rgba(60,18,40,.7)}
+  #banner .b2{font-size:40px;font-weight:800;color:#fff;line-height:1.05;text-shadow:0 3px 0 #19958f,0 8px 18px rgba(60,18,40,.5)}
   @keyframes sway{from{transform:translateX(-24px)}to{transform:translateX(24px)}}
 </style>
 </head>
 <body>
 <canvas id="cv"></canvas>
 <div id="ui">
-  <div id="top"><div class="lbl">THROWN</div><div class="val" id="score">0</div></div>
+  <div id="top"><div class="lbl" id="boutlbl">BOUT 1/5</div><div class="val" id="score">0</div><div class="dots" id="dots"></div>
+    <div id="tr"><span class="envi"></span><span id="envn">0</span></div></div>
+  <div id="banner"><div class="b1" id="ban1"></div><div class="b2" id="ban2"></div></div>
   <div id="chain"></div>
   <div id="edge"></div>
   <div id="hint"><div class="arw">&#8596;</div><div class="txt">SHOVE THEM OFF THE RING</div></div>
   <div id="over">
     <div class="big" id="overbig">OFF THE RING</div>
     <div class="sub" id="oversub"></div>
+    <div class="dots" id="overdots"></div>
+    <div class="env" id="overenv"></div>
     <button id="again">AGAIN</button>
     <button id="custom">MY SUMO</button>
   </div>
@@ -579,6 +602,80 @@ var G = {
   lastThrow: -9, chain: 0, timeScale: 1
 };
 var foes = [];
+
+// ------------------------------------------------------------- career: a basho of 5 bouts, ranks
+// Every bout is the same crowded ring as before; it now has a finish line (throw N off).
+// Step 1 ships the first 3 ranks. Numbers are placeholders until the config pass.
+var RANKS = [
+  { name: 'JONOKUCHI', goal: 4, cap: 2, pool: ['lug'], env: 2 },
+  { name: 'JONIDAN', goal: 5, cap: 3, pool: ['lug', 'twins'], env: 3 },
+  { name: 'SANDANME', goal: 6, cap: 3, pool: ['lug', 'twins', 'charger'], env: 4 }
+];
+var BOUTS = 5, ZENSHO_ENV = 10, CAREER_KEY = 'shoveoff.career';
+var career = (function () {
+  try { var o = JSON.parse(localStorage.getItem(CAREER_KEY) || 'null'); if (o && o.res) return o; } catch (x) {}
+  return { rank: 0, env: 0, bout: 0, res: [] };
+})();
+function saveCareer() { try { localStorage.setItem(CAREER_KEY, JSON.stringify(career)); } catch (x) {} }
+function rankNow() { return RANKS[career.rank]; }
+function boutGoal() { return rankNow().goal + Math.floor(career.bout / 2); }
+function dotsHtml(res) {
+  var h = '';
+  for (var i = 0; i < BOUTS; i++) h += '<span class="dot' + (i < res.length ? (res[i] ? ' w' : ' l') : '') + '"></span>';
+  return h;
+}
+var elBoutLbl = document.getElementById('boutlbl'), elDots = document.getElementById('dots');
+var elEnvN = document.getElementById('envn'), elBanner = document.getElementById('banner');
+var elOverDots = document.getElementById('overdots'), elOverEnv = document.getElementById('overenv');
+var bannerT = 0;
+function hud() {
+  elBoutLbl.textContent = rankNow().name + ' \u00b7 BOUT ' + (career.bout + 1) + '/' + BOUTS;
+  elScore.textContent = Math.min(G.score, boutGoal()) + '/' + boutGoal();
+  elDots.innerHTML = dotsHtml(career.res);
+  elEnvN.textContent = String(career.env);
+}
+function banner(a, b) {
+  document.getElementById('ban1').textContent = a;
+  document.getElementById('ban2').textContent = b;
+  elBanner.classList.add('on'); bannerT = 1.6;
+}
+function boutWon() {
+  G.phase = 'won'; G.wonT = 0;
+  showChain('WIN!'); chime(660, 0.28); chime(990, 0.22);
+}
+// a bout ends: bank the envelopes now, then either the next bout or the end-of-basho verdict
+function endBout(win) {
+  var goal = boutGoal(), gain = 0;
+  career.res.push(win ? 1 : 0);
+  if (win) { gain = rankNow().env; career.env += gain; }
+  career.bout++;
+  var res = career.res.slice(), title, sub, btn;
+  if (career.bout < BOUTS) {
+    title = win ? 'WIN!' : 'SHOVED OUT';
+    sub = win ? 'THREW ' + goal + ' OFF THE RING' : 'THREW ' + Math.min(G.score, goal) + ' OF ' + goal;
+    btn = 'NEXT BOUT';
+  } else {
+    var w = 0; for (var i = 0; i < res.length; i++) w += res[i];
+    var l = BOUTS - w, from = career.rank, top = RANKS.length - 1;
+    if (w === BOUTS) { title = 'ZENSHO!'; career.rank = Math.min(top, from + 2); gain += ZENSHO_ENV; career.env += ZENSHO_ENV; }
+    else if (w > l) { title = 'KACHI-KOSHI'; career.rank = Math.min(top, from + 1); }
+    else { title = 'MAKE-KOSHI'; career.rank = Math.max(0, from - 1); }
+    sub = w + '\u2013' + l + ' \u00b7 ' + (career.rank > from ? 'PROMOTED TO ' + RANKS[career.rank].name
+      : career.rank < from ? 'DOWN TO ' + RANKS[career.rank].name
+      : (w > l ? 'TOP RANK IN THIS BUILD' : 'STAYS ' + RANKS[from].name));
+    btn = 'NEXT BASHO';
+    career.bout = 0; career.res = [];
+  }
+  saveCareer();
+  G.phase = 'over';
+  elOverBig.textContent = title;
+  elOverSub.textContent = sub;
+  elOverDots.innerHTML = dotsHtml(res);
+  elOverEnv.innerHTML = gain ? '<span class="envi"></span>+' + gain : '';
+  elAgain.textContent = btn;
+  elOver.classList.add('on');
+  if (win) chime(880, 0.2);
+}
 var LOOK_KEY = 'shoveoff.look';
 var look = (function () {
   try { var o = JSON.parse(localStorage.getItem(LOOK_KEY) || 'null'); if (o && o.skin !== undefined) return o; } catch (x) {}
@@ -603,13 +700,16 @@ var LEAN_THRESH = 4.5, LEAN_GAIN = 0.085;
 
 // ------------------------------------------------------------- spawning
 // how many of them share the ring with you: it fills up as you win
-function want() { return 1 + Math.min(3, Math.floor(G.t / 13)); }
+function want() { return Math.max(1, Math.min(rankNow().cap, 1 + Math.floor(G.t / 13), boutGoal() - G.score)); }
+function liveCount() { var n = 0; for (var i = 0; i < foes.length; i++) if (foes[i].alive) n++; return n; }
+function typeOf(k) { for (var i = 0; i < TYPES.length; i++) if (TYPES[i].k === k) return i; return 0; }
 
 function spawnOne() {
   var idx = G.duel;
-  var ti = idx === 0 ? 0 : 1 + ((idx - 1) % (TYPES.length - 1));
-  var T = TYPES[ti];
-  var boost = Math.min(2.0, Math.pow(1.045, idx));
+  var pool = rankNow().pool, k = idx === 0 ? 'lug' : pool[Math.floor(Math.random() * pool.length)];
+  if (k === 'twins' && liveCount() + 2 > rankNow().cap) k = 'lug';   /* twins only when there is room for both */
+  var T = TYPES[typeOf(k)];
+  var boost = Math.min(2.0, Math.pow(1.045, idx + career.rank * 4 + career.bout));
   G.duel++;
   var ang = Math.atan2(-mitt.z, -mitt.x) + (Math.random() - 0.5) * 1.2;
   for (var i = 0; i < T.n; i++) {
@@ -635,10 +735,11 @@ function clearFoes() {
 function reset() {
   clearFoes();
   G.score = 0; G.duel = 0; G.t = 0; G.spawnT = 0; G.fallT = 0;
-  G.lastThrow = -9; G.chain = 0;
+  G.lastThrow = -9; G.chain = 0; G.wonT = 0;
   mitt.x = 0; mitt.z = 1.25; mitt.vx = 0; mitt.vz = 0;
   mitt.tx = 0; mitt.tz = 1.25; mitt.y = 0; mitt.vy = 0; mitt.lastHit = -9;
-  elScore.textContent = '0';
+  hud();
+  banner(rankNow().name + ' \u00b7 BOUT ' + (career.bout + 1) + '/' + BOUTS, 'SHOVE ' + boutGoal() + ' OFF');
   elHint.style.opacity = '0';
   elOver.classList.remove('on');
   spawnOne();
@@ -768,7 +869,8 @@ function foeOff(f) {
   f.fvy = 2.4 + Math.random() * 1.4;
   f.spin = (Math.random() - 0.5) * 9;
   G.score++;
-  elScore.textContent = String(G.score);
+  hud();
+  if (G.phase === 'play' && G.score >= boutGoal()) boutWon();
   puff(f.x, 0.25, f.z, 16, C.dust, 5.2, 0.17);
   puff(f.x, 0.5, f.z, 10, C.spark, 4.2, 0.13, -3);
   whump(0.55, 1500, 0.3);
@@ -866,7 +968,7 @@ function checkOut(dt) {
   }
   var live = 0;
   for (var j = 0; j < foes.length; j++) if (foes[j].alive) live++;
-  if (G.phase === 'play' && live < want() && G.spawnT <= 0) {
+  if (G.phase === 'play' && live < want() && G.spawnT <= 0 && G.score + live < boutGoal()) {
     G.spawnT = live === 0 ? 0.40 : 0.90;
   }
   if (G.phase === 'play') {
@@ -1087,13 +1189,15 @@ function tick(now) {
   if (!last) last = now;
   var dt = Math.min(0.05, (now - last) / 1000);
   last = now;
-  if (G.phase === 'fall') dt *= 0.34;
+  if (G.phase === 'fall' || G.phase === 'won') dt *= 0.34;
+  if (bannerT > 0) { bannerT -= dt; if (bannerT <= 0) elBanner.classList.remove('on'); }
   frameHit = 0; framePush = 0; bodyCheck = false;
   var pBefore = pNext;
 
-  if (G.phase === 'play' || G.phase === 'idle') {
+  if (G.phase === 'play' || G.phase === 'idle' || G.phase === 'won') {
     G.t += dt;
-    if (G.spawnT > 0) {
+    if (G.phase === 'won') { G.wonT += dt; if (G.wonT > 0.42) endBout(true); }
+    if (G.spawnT > 0 && G.phase !== 'won') {
       G.spawnT -= dt;
       if (G.spawnT <= 0) { G.spawnT = 0; spawnOne(); }
     }
@@ -1122,10 +1226,7 @@ function tick(now) {
       if (f.alive && f.state !== 'enter') { f.x += f.vx * dt; f.z += f.vz * dt; f.vx *= 0.96; f.vz *= 0.96; }
     }
     if (G.fallT > 0.95) {
-      G.phase = 'over';
-      elOverBig.textContent = 'SHOVED OUT';
-      elOverSub.textContent = 'THROWN ' + G.score;
-      elOver.classList.add('on');
+      endBout(false);
     }
   }
 
@@ -1147,7 +1248,7 @@ function tick(now) {
 window.__toy = {
   state: function () {
     return {
-      phase: G.phase, score: G.score, duel: G.duel, t: G.t,
+      phase: G.phase, score: G.score, duel: G.duel, t: G.t, rank: career.rank, bout: career.bout, goal: boutGoal(), env: career.env,
       over: G.phase === 'over' || G.phase === 'fall',
       mx: mitt.x, mz: mitt.z, mr: Math.hypot(mitt.x, mitt.z), ringR: RING_R
     };
@@ -1176,6 +1277,9 @@ window.__toy = {
   tapScreen: function () { onDown(VIEW.w * 0.5, VIEW.h * 0.6); },
   reset: function () { reset(); G.phase = 'play'; },
   locker: function () { openLocker(); },
+  career: function () { return JSON.parse(JSON.stringify(career)); },
+  setCareer: function (o) { for (var k in o) career[k] = o[k]; saveCareer(); reset(); G.phase = 'idle'; },
+  endBout: function (win) { endBout(!!win); },
   lat: function () { return window.__lat.slice(); },
   words: function () {
     var out = [];
