@@ -54,7 +54,18 @@
   #locker .ttl{font-size:26px;font-weight:800;color:#6a2a1a;letter-spacing:.08em;text-align:center}
   #locker .row{display:flex;align-items:center;gap:10px}
   #locker .rl{width:62px;font-size:14px;font-weight:800;color:#a0623a;letter-spacing:.1em}
-  #locker .sw{display:flex;gap:7px;flex-wrap:wrap;flex:1}
+  #locker .sw{display:flex;gap:7px;flex-wrap:nowrap;flex:1;overflow-x:auto;padding:4px 2px 11px;scrollbar-width:none}
+  #locker .sw::-webkit-scrollbar{display:none}
+  #locker .sw button{flex:none}
+  #lkRows{display:flex;flex-direction:column;gap:2px}
+  #lkMsg{min-height:16px;text-align:center;font-size:13px;font-weight:800;color:#b5431f;letter-spacing:.06em}
+  #quick{position:absolute;right:16px;top:70px;display:none;flex-direction:column;gap:10px;pointer-events:auto}
+  #quick.on{display:flex}
+  #quick button{width:58px;height:66px;border:3px solid #fff3e2;border-radius:18px;background:rgba(255,246,232,.92);cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:4px 0 2px;
+    box-shadow:0 4px 0 rgba(106,42,26,.35);font-family:inherit;font-size:10px;font-weight:800;color:#6a2a1a;letter-spacing:.04em}
+  #quick button svg{width:34px;height:34px;display:block}
+  #quick button:active{transform:translateY(3px)}
   #locker .sw button{width:38px;height:38px;border-radius:50%;border:3px solid rgba(0,0,0,.12);cursor:pointer;
     box-shadow:0 3px 0 rgba(0,0,0,.18)}
   #locker .sw button.on{border:4px solid #2b1410;transform:scale(1.08)}
@@ -168,6 +179,11 @@
   .rivs span{border-radius:10px;padding:5px 2px;text-align:center;font-size:10px;font-weight:800;line-height:1.1;
     background:#ecd9c2;color:#b39a7e;min-height:34px;display:flex;align-items:center;justify-content:center}
   .rivs span.got{background:#2b1410;color:#ffd45a}
+  /* landscape: sheets become a side panel on the right so the wrestler stays in view on the left */
+  @media (min-aspect-ratio: 23/25){
+    #locker,#home,.sheet{left:auto;right:16px;top:12px;bottom:12px;width:min(500px,50%);max-height:none;overflow:auto;
+      border-radius:26px;padding-bottom:16px;justify-content:center}
+  }
   @keyframes sway{from{transform:translateX(-24px)}to{transform:translateX(24px)}}
 </style>
 </head>
@@ -177,6 +193,7 @@
   <div id="top"><div class="lbl" id="boutlbl">BOUT 1/5</div><div class="val" id="score">0</div><div class="dots" id="dots"></div>
     <div id="tr"><span class="envi"></span><span id="envn">0</span></div></div>
   <div id="rival"></div>
+  <div id="quick"><button id="qSumo"><svg viewBox="0 0 40 40"><circle cx="20" cy="23" r="13" fill="#f2c49b" stroke="#2b1410" stroke-width="2.2"/><path d="M8 20a12 10 0 0 1 24 0c-4-3-20-3-24 0z" fill="#2b1410"/><ellipse cx="20" cy="9" rx="4.2" ry="3.2" fill="#2b1410"/><path d="M13 20l5 2M27 20l-5 2" stroke="#2b1410" stroke-width="2.2" stroke-linecap="round"/><circle cx="15.5" cy="25" r="1.8" fill="#2b1410"/><circle cx="24.5" cy="25" r="1.8" fill="#2b1410"/><path d="M17 31q3 1.5 6 0" stroke="#2b1410" stroke-width="2" fill="none" stroke-linecap="round"/></svg>MY SUMO</button><button id="qHeya"><svg viewBox="0 0 40 40"><path d="M4 18L20 6l16 12" fill="none" stroke="#2b1410" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 17h24v16H8z" fill="#fffaf0" stroke="#2b1410" stroke-width="2.2"/><path d="M2 18q18-14 36 0" fill="#b5431f" stroke="#2b1410" stroke-width="2.2"/><rect x="16" y="22" width="8" height="11" fill="#8a3a22"/><circle cx="20" cy="27" r="2" fill="#f6c344"/></svg>HEYA</button></div>
   <div id="banner"><div class="b1" id="ban1"></div><div class="b2" id="ban2"></div></div>
   <div id="chain"></div>
   <div id="edge"></div>
@@ -210,9 +227,8 @@
   <div id="locker">
     <div class="ttl">MY SUMO</div>
     <div class="lenv"><span class="envi"></span><span id="lenvn">0</span></div>
-    <div class="row"><span class="rl">SKIN</span><div class="sw" id="swSkin"></div></div>
-    <div class="row"><span class="rl">BELT</span><div class="sw" id="swBelt"></div></div>
-    <div class="row"><span class="rl">HAIR</span><div class="sw" id="swHair"></div></div>
+    <div id="lkRows"></div>
+    <div id="lkMsg"></div>
     <button id="fight">FIGHT!</button>
   </div>
 </div>
@@ -620,6 +636,7 @@ function buildFoe(r, col, skinCol) {
     face.add(ear);
   }
   var fz = hz - H;                                   /* front surface of the head */
+  var eyeParts = [];
   for (var s = -1; s <= 1; s += 2) {
     var w = new THREE.Mesh(GEO.sphLo, mat(0xfffaf2));
     w.scale.set(r * 0.15, r * 0.18, r * 0.07);
@@ -633,6 +650,7 @@ function buildFoe(r, col, skinCol) {
     gl.scale.setScalar(r * 0.028);
     gl.position.set(s * r * 0.19 + r * 0.035, hy + r * 0.14, fz - r * 0.01);
     face.add(gl);
+    eyeParts.push(w, p, gl);
     var ck = new THREE.Mesh(GEO.sphLo, mat(0xff8f8f, { transparent: true, opacity: 0.6 }));
     ck.scale.set(r * 0.1, r * 0.06, r * 0.04);
     ck.position.set(s * r * 0.36, hy - r * 0.1, fz + r * 0.17);
@@ -640,6 +658,7 @@ function buildFoe(r, col, skinCol) {
   }
   // two thick brows angled down to the middle: every wrestler looks like he means it
   var brow = new THREE.Group();
+  g.userData.eyes = eyeParts;
   for (var bi = -1; bi <= 1; bi += 2) {
     var bw = new THREE.Mesh(GEO.box, mat(C.hair));
     bw.scale.set(r * 0.22, r * 0.065, r * 0.07);
@@ -679,20 +698,134 @@ function buildFoe(r, col, skinCol) {
 
 // ---------------------------------------------------------------- the player's own wrestler
 // Same footprint as the hand it replaces (MITT_R): the physics never knew it was a hand.
-var LOOK_SKIN = [0xf6d2b0, 0xe8b088, 0xc98a5e, 0x8f5a3a];
+var LOOK_SKIN = [0xf6d2b0, 0xe8b088, 0xc98a5e, 0x8f5a3a, 0xffe6cc, 0x6b3f26];
 var LOOK_BELT = [0xd83a3a, 0x1fb3a6, 0x2f4f8f, 0xe8b52a, 0x2b2b2b, 0xf28fb8, 0x7a3fa8, 0x3f9a58, 0xf4efe4, 0xffc93a];
 var BELT_PRICE = [0, 0, 0, 0, 0, 0, 10, 10, 16, 30];      /* the first six are free, the rest are bought with envelopes */
-var LOOK_HAIR = ['KNOT', 'FAN', 'BAND'];
+var LOOK_HAIR = ['KNOT', 'FAN', 'BAND', 'BALD', 'BIG KNOT', 'AFRO', 'MOHAWK'];
+var LOOK_FACE = ['FIERCE', 'CALM', 'HAPPY', 'GRIN', 'SLEEPY'];
+var LOOK_GEAR = ['NONE', 'HACHIMAKI', 'SHADES', 'FLOWER', 'MUSTACHE', 'KESHO', 'TSUNA', 'CROWN'];
+var LOOK_SALT = ['SALT', 'GOLD', 'SAKURA', 'CONFETTI', 'FIRE'];
+var SALT_COLS = [[0xffffff], [0xffd45a, 0xfff2c4], [0xffb7d0, 0xff8fb0, 0xffffff],
+  [0xff5a5a, 0x4fc3f7, 0xffd45a, 0x7ee08a, 0xc58aff], [0xff7a2f, 0xffc93a, 0xff3b2e]];
+// every row of MY SUMO: price in envelopes (0 = free) and the rank needed (index into RANKS) where it matters
+var LOOK_ROWS = [
+  { k: 'skin', lbl: 'SKIN', list: LOOK_SKIN, price: [0, 0, 0, 0, 0, 0] },
+  { k: 'belt', lbl: 'BELT', list: LOOK_BELT, price: BELT_PRICE },
+  { k: 'hair', lbl: 'HAIR', list: LOOK_HAIR, price: [0, 0, 0, 0, 12, 20, 25], txt: true },
+  { k: 'face', lbl: 'FACE', list: LOOK_FACE, price: [0, 0, 8, 10, 12], txt: true },
+  { k: 'gear', lbl: 'GEAR', list: LOOK_GEAR, price: [0, 10, 15, 12, 10, 30, 0, 50], rank: [0, 0, 0, 0, 0, 6, 9, 9], txt: true },
+  { k: 'salt', lbl: 'SALT', list: LOOK_SALT, price: [0, 12, 15, 18, 25], txt: true }
+];
 function buildPlayer(look) {
   var g = buildFoe(MITT_R, LOOK_BELT[look.belt], LOOK_SKIN[look.skin]);
-  var ud = g.userData, hd = ud.head;
-  if (look.hair === 1) {                      /* oicho-mage: the fanned ginkgo-leaf knot */
-    ud.bun.scale.set(MITT_R * 0.36, MITT_R * 0.1, MITT_R * 0.2);
-  } else if (look.hair === 2) {               /* shaved head + headband in the belt colour */
+  var ud = g.userData, hd = ud.head, R = MITT_R, F = ud.face, H = hd.H, hy = hd.y, hz = hd.z, fz = hz - H;
+  var skinM = ud.mat, hairM = toon(C.hair), ink2 = mat(C.hair);
+  var hair = look.hair | 0, face = look.face | 0, gear = look.gear | 0;
+  // ---- hair
+  if (hair === 1) {                           /* oicho-mage: the fanned ginkgo-leaf knot */
+    ud.bun.scale.set(R * 0.36, R * 0.1, R * 0.2);
+  } else if (hair === 2) {                    /* shaved head + headband in the belt colour */
     ud.cap.visible = false; ud.bun.visible = false;
-    var band = new THREE.Mesh(new THREE.TorusGeometry(hd.H * 0.98, MITT_R * 0.075, 6, 22), toon(LOOK_BELT[look.belt]));
-    band.rotation.x = Math.PI / 2; band.position.set(0, hd.y + hd.H * 0.32, hd.z);
-    ud.face.add(band);
+    var band = new THREE.Mesh(new THREE.TorusGeometry(H * 0.98, R * 0.075, 6, 22), toon(LOOK_BELT[look.belt]));
+    band.rotation.x = Math.PI / 2; band.position.set(0, hy + H * 0.32, hz);
+    F.add(band);
+  } else if (hair === 3) {                    /* bald and shiny */
+    ud.cap.visible = false; ud.bun.visible = false;
+    var shine = new THREE.Mesh(GEO.sphLo, mat(0xffffff, { transparent: true, opacity: 0.7 }));
+    shine.scale.set(R * 0.14, R * 0.05, R * 0.1); shine.position.set(-H * 0.3, hy + H * 0.9, hz); F.add(shine);
+  } else if (hair === 4) {                    /* a towering knot */
+    ud.bun.scale.set(R * 0.2, R * 0.2, R * 0.42); ud.bun.position.y += R * 0.08;
+  } else if (hair === 5) {                    /* afro */
+    ud.bun.visible = false;
+    ud.cap.scale.set(H * 1.32, H * 1.0, H * 1.22); ud.cap.position.set(0, hy + H * 0.58, hz + H * 0.3);
+  } else if (hair === 6) {                    /* mohawk in the belt colour */
+    ud.cap.visible = false; ud.bun.visible = false;
+    var mh = toon(LOOK_BELT[look.belt]);
+    for (var mi = 0; mi < 5; mi++) {
+      var ma = -0.9 + mi * 0.45, sp = new THREE.Mesh(new THREE.ConeGeometry(R * 0.09, R * 0.3, 6), mh);
+      sp.position.set(0, hy + Math.cos(ma) * H * 1.02, hz + Math.sin(ma) * H * 1.02); sp.rotation.x = ma; F.add(sp);
+    }
+  }
+  // ---- face
+  var eyes = ud.eyes, browBits = ud.brow.children;
+  if (face === 1 || face === 4) for (var bi = 0; bi < browBits.length; bi++) browBits[bi].rotation.z = 0;
+  if (face === 2) {                           /* happy: closed eyes ^ ^ and a big smile */
+    for (var ei = 0; ei < eyes.length; ei++) eyes[ei].visible = false;
+    for (var s = -1; s <= 1; s += 2) {
+      var arc = new THREE.Mesh(new THREE.TorusGeometry(R * 0.08, R * 0.025, 6, 12, Math.PI), ink2);
+      arc.position.set(s * R * 0.2, hy + R * 0.08, fz + R * 0.06); F.add(arc);
+    }
+    ud.mouth.visible = false;
+    var sm = new THREE.Mesh(new THREE.TorusGeometry(R * 0.12, R * 0.03, 6, 12, Math.PI), mat(0x5a1626));
+    sm.rotation.z = Math.PI; sm.position.set(0, hy - R * 0.06, fz + R * 0.04); F.add(sm);
+  } else if (face === 3) {                    /* grin: a wide toothy smile */
+    ud.mouth.visible = false;
+    var teeth = new THREE.Mesh(GEO.sphLo, mat(0xffffff));
+    teeth.scale.set(R * 0.22, R * 0.08, R * 0.05); teeth.position.set(0, hy - R * 0.1, fz + R * 0.03); F.add(teeth);
+    var lip = new THREE.Mesh(GEO.sphLo, mat(0x5a1626));
+    lip.scale.set(R * 0.25, R * 0.1, R * 0.04); lip.position.set(0, hy - R * 0.1, fz + R * 0.05); F.add(lip);
+  } else if (face === 4) {                    /* sleepy: heavy lids */
+    for (var li = 0; li < eyes.length; li += 3) {
+      var lid = new THREE.Mesh(GEO.sphLo, skinM);
+      lid.scale.set(R * 0.165, R * 0.12, R * 0.08);
+      lid.position.copy(eyes[li].position); lid.position.y += R * 0.085; lid.position.z -= R * 0.012; F.add(lid);
+    }
+    ud.mouth.scale.set(R * 0.1, R * 0.03, R * 0.05);
+  }
+  // ---- gear
+  if (gear === 1) {                           /* hachimaki: white band, red knot at the back */
+    var hb = new THREE.Mesh(new THREE.TorusGeometry(H * 1.0, R * 0.07, 6, 24), toon(0xfffaf0));
+    hb.rotation.x = Math.PI / 2; hb.position.set(0, hy + H * 0.3, hz); F.add(hb);
+    var kn = new THREE.Mesh(GEO.sphLo, toon(0xd83a3a));
+    kn.scale.set(R * 0.12, R * 0.1, R * 0.08); kn.position.set(0, hy + H * 0.3, hz + H * 1.02); F.add(kn);
+  } else if (gear === 2) {                    /* shades */
+    var gm = mat(0x141414);
+    for (var g2 = -1; g2 <= 1; g2 += 2) {
+      var lens = new THREE.Mesh(GEO.sphLo, gm);
+      lens.scale.set(R * 0.16, R * 0.12, R * 0.05); lens.position.set(g2 * R * 0.2, hy + R * 0.1, fz + R * 0.0); F.add(lens);
+    }
+    var bridge = new THREE.Mesh(GEO.box, gm);
+    bridge.scale.set(R * 0.16, R * 0.03, R * 0.03); bridge.position.set(0, hy + R * 0.13, fz - R * 0.01); F.add(bridge);
+  } else if (gear === 3) {                    /* a flower tucked behind the ear */
+    var pm = toon(0xff8fb8);
+    for (var pi = 0; pi < 5; pi++) {
+      var pa = pi / 5 * Math.PI * 2, pet = new THREE.Mesh(GEO.sphLo, pm);
+      pet.scale.setScalar(R * 0.07); pet.position.set(H * 0.86, hy + H * 0.55 + Math.sin(pa) * R * 0.08, hz + Math.cos(pa) * R * 0.08); F.add(pet);
+    }
+    var pc = new THREE.Mesh(GEO.sphLo, toon(0xffd45a));
+    pc.scale.setScalar(R * 0.055); pc.position.set(H * 0.9, hy + H * 0.55, hz); F.add(pc);
+  } else if (gear === 4) {                    /* mustache */
+    for (var m4 = -1; m4 <= 1; m4 += 2) {
+      var mu = new THREE.Mesh(GEO.sphLo, hairM);
+      mu.scale.set(R * 0.13, R * 0.045, R * 0.05); mu.position.set(m4 * R * 0.1, hy - R * 0.02, fz + R * 0.01);
+      mu.rotation.z = m4 * 0.35; F.add(mu);
+    }
+  } else if (gear === 5) {                    /* kesho-mawashi: the ceremonial apron */
+    var ap = new THREE.Mesh(GEO.box, toon(0xe8b52a));
+    ap.scale.set(R * 0.8, R * 0.85, R * 0.06); ap.position.set(0, R * 0.32, -R * 1.18); g.add(ap);
+    var st = new THREE.Mesh(GEO.box, toon(LOOK_BELT[look.belt]));
+    st.scale.set(R * 0.5, R * 0.55, R * 0.065); st.position.set(0, R * 0.3, -R * 1.19); g.add(st);
+    var fr = new THREE.Mesh(GEO.box, toon(0xfff2c4));
+    fr.scale.set(R * 0.8, R * 0.08, R * 0.07); fr.position.set(0, -R * 0.08, -R * 1.18); g.add(fr);
+  } else if (gear === 6) {                    /* tsuna: the yokozuna's rope with paper zigzags */
+    var ts = new THREE.Mesh(new THREE.TorusGeometry(R * 1.02, R * 0.14, 8, 28), toon(0xfffaf0));
+    ts.rotation.x = Math.PI / 2; ts.position.y = R * 0.86; g.add(ts);
+    for (var zi = -2; zi <= 2; zi++) {
+      var za = -Math.PI / 2 + zi * 0.32, zz = new THREE.Mesh(GEO.box, mat(0xffffff));
+      zz.scale.set(R * 0.1, R * 0.32, R * 0.02);
+      zz.position.set(Math.cos(za) * R * 1.12, R * 0.62, Math.sin(za) * R * 1.12); zz.rotation.y = -za - Math.PI / 2; zz.rotation.z = 0.25; g.add(zz);
+    }
+  } else if (gear === 7) {                    /* a crown for the top of the banzuke */
+    ud.bun.visible = false;
+    var cm = toon(0xffc93a);
+    var ring = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.26, R * 0.24, R * 0.16, 14, 1, true), cm);
+    ring.material.side = THREE.DoubleSide; ring.position.set(0, hy + H * 1.0, hz + H * 0.05); F.add(ring);
+    for (var ci = 0; ci < 5; ci++) {
+      var ca = ci / 5 * Math.PI * 2, sp2 = new THREE.Mesh(new THREE.ConeGeometry(R * 0.06, R * 0.14, 5), cm);
+      sp2.position.set(Math.cos(ca) * R * 0.24, hy + H * 1.0 + R * 0.14, hz + H * 0.05 + Math.sin(ca) * R * 0.24); F.add(sp2);
+    }
+    var gem = new THREE.Mesh(GEO.sphLo, mat(0xd83a3a));
+    gem.scale.setScalar(R * 0.05); gem.position.set(0, hy + H * 1.0, hz + H * 0.05 - R * 0.26); F.add(gem);
   }
   // a soft teal ring at the feet: "this one is you", same as the hand had
   var halo = new THREE.Mesh(new THREE.RingGeometry(MITT_R * 1.05, MITT_R * 1.32, 32),
@@ -940,6 +1073,7 @@ var career = (function () {
   return { rank: 0, env: 0, bout: 0, res: [] };
 })();
 career.chanko = career.chanko || 0; career.owned = career.owned || [];
+career.own = career.own || career.owned.map(function (i) { return 'belt:' + i; });   /* migrate the old belt-only list */
 career.tech = career.tech || []; career.book = career.book || {}; career.tier = career.tier || {}; career.rivals = career.rivals || [];
 // DOJO: each technique rides on a gesture the player already does (rule L2: no new buttons). Learned in order.
 var TECH = [
@@ -967,7 +1101,13 @@ function bookThrow(f) {
 // CHANKO: the only stat in the heya. Mass only (collisions), never the finger spring (rule L1), capped.
 var CHANKO_COST = [6, 14, 26, 42, 64], CHANKO_MASS = 0.12, CHANKO_SIZE = 0.06;
 function playerMass() { return MITT_M0 * (1 + CHANKO_MASS * career.chanko); }
-function beltOwned(i) { return !BELT_PRICE[i] || career.owned.indexOf(i) >= 0; }
+function lookRow(k) { for (var i = 0; i < LOOK_ROWS.length; i++) if (LOOK_ROWS[i].k === k) return LOOK_ROWS[i]; }
+function rankOk(R, i) { return !R.rank || career.rank >= R.rank[i]; }
+function lookOwned(k, i) { var R = lookRow(k); return career.own.indexOf(k + ':' + i) >= 0 || (!R.price[i] && rankOk(R, i)); }
+function saltPuff(x, y, z, n, spd) {
+  var cols = SALT_COLS[look.salt | 0] || SALT_COLS[0];
+  for (var i = 0; i < cols.length; i++) puff(x, y, z, Math.ceil(n / cols.length), cols[i], spd, 0.07, -9);
+}
 function saveCareer() { try { localStorage.setItem(CAREER_KEY, JSON.stringify(career)); } catch (x) {} }
 function rankNow() { return RANKS[career.rank]; }
 function boutGoal() { return rankNow().goal + Math.floor(career.bout / 2); }
@@ -1014,6 +1154,7 @@ function tech(name, f) {
 }
 function boutWon() {
   G.phase = 'won'; G.wonT = 0;
+  saltPuff(mitt.x, 1.6, mitt.z, 30, 5.0);
   showChain('WIN!'); chime(660, 0.28); chime(990, 0.22);
 }
 // a bout ends: bank the envelopes now, then either the next bout or the end-of-basho verdict
@@ -1138,7 +1279,7 @@ function reset() {
   else banner(rankNow().name + ' \u00b7 BOUT ' + (career.bout + 1) + '/' + BOUTS, 'SHOVE ' + boutGoal() + ' OFF');
   elHint.style.opacity = '0';
   elOver.classList.remove('on');
-  puff(mitt.x, 1.4, mitt.z, 22, 0xffffff, 4.2, 0.07, -9);
+  saltPuff(mitt.x, 1.4, mitt.z, 22, 4.2);
   spawnOne();
 }
 
@@ -1431,6 +1572,8 @@ function checkOut(dt) {
 }
 
 // ------------------------------------------------------------- visuals
+var elTopBar = document.getElementById('top');
+var dressK = 0, dressPos = new THREE.Vector3(), dressLook = new THREE.Vector3(), tmpCB = new THREE.Vector3(), tmpCL = new THREE.Vector3();
 function paint(dt) {
   // hand
   mitt.squash = Math.max(0, mitt.squash - dt * 4.2);
@@ -1529,14 +1672,25 @@ function paint(dt) {
   dangerRope.material.opacity = near * 0.9;
 
   // camera shake
+  // dressing camera: while a sheet is up, close in on your wrestler and lift him into the top of the screen
+  var dress = elLocker.classList.contains('on') || elHome.classList.contains('on') || elDojo.classList.contains('on') || elBook.classList.contains('on');
+  dressK += ((dress ? 1 : 0) - dressK) * Math.min(1, dt * 6);
+  var ds = 1 + CHANKO_SIZE * career.chanko;
+  var dd = VIEW.port ? 1 : 0.62;
+  dressPos.set(mitt.x, 3.0 * ds * dd, mitt.z + 7.0 * ds * dd);
+  dressLook.set(mitt.x, 0.95 * ds, mitt.z);
+  var cb = tmpCB.copy(camBase).lerp(dressPos, dressK), cl = tmpCL.copy(camLook).lerp(dressLook, dressK);
+  if (dressK > 0.002) cam.setViewOffset(VIEW.w, VIEW.h, VIEW.port ? 0 : VIEW.w * 0.25 * dressK, VIEW.port ? VIEW.h * 0.29 * dressK : 0, VIEW.w, VIEW.h);
+  else if (cam.view && cam.view.enabled) cam.clearViewOffset();
+  elTopBar.style.opacity = String(1 - dressK);
   camShake.amp = Math.max(0, camShake.amp - dt * 1.7);
   if (camShake.amp > 0) {
     cam.position.set(
-      camBase.x + (Math.random() - 0.5) * camShake.amp,
-      camBase.y + (Math.random() - 0.5) * camShake.amp * 0.8,
-      camBase.z + (Math.random() - 0.5) * camShake.amp * 0.5);
-  } else cam.position.copy(camBase);
-  cam.lookAt(camLook);
+      cb.x + (Math.random() - 0.5) * camShake.amp,
+      cb.y + (Math.random() - 0.5) * camShake.amp * 0.8,
+      cb.z + (Math.random() - 0.5) * camShake.amp * 0.5);
+  } else cam.position.copy(cb);
+  cam.lookAt(cl);
 
   if (chainTimer > 0) {
     chainTimer -= dt;
@@ -1545,6 +1699,7 @@ function paint(dt) {
   stepParts(dt);
   stepPops(dt);
   stepWaves(dt);
+  elQuick.classList.toggle('on', quickOn());
   G.cheer = Math.max(0, (G.cheer || 0) - dt * 0.8);
   crowdIdle(performance.now() / 1000, G.cheer);
 }
@@ -1610,16 +1765,18 @@ elAgain.addEventListener('click', function (e) {
 var elLocker = document.getElementById('locker');
 function hexCss(h) { return '#' + ('000000' + h.toString(16)).slice(-6); }
 function renderLocker() {
-  var mk = function (id, list, key, isHair) {
-    var el = document.getElementById(id), h = '';
-    for (var i = 0; i < list.length; i++) {
-      var lock = key === 'belt' && !beltOwned(i);
-      h += '<button data-k="' + key + '" data-v="' + i + '" class="' + (isHair ? 'hair' : '') + (look[key] === i ? ' on' : '') + (lock ? ' lock' : '') + '"'
-        + (isHair ? '>' + list[i] : ' style="background:' + hexCss(list[i]) + '">') + (lock ? '<span>' + BELT_PRICE[i] + '</span>' : '') + '</button>';
+  var h = '';
+  for (var r = 0; r < LOOK_ROWS.length; r++) {
+    var R = LOOK_ROWS[r];
+    h += '<div class="row"><span class="rl">' + R.lbl + '</span><div class="sw">';
+    for (var i = 0; i < R.list.length; i++) {
+      var own = lookOwned(R.k, i), badge = own ? '' : !rankOk(R, i) ? RANKS[R.rank[i]].name.slice(0, 6) : R.price[i];
+      h += '<button data-k="' + R.k + '" data-v="' + i + '" class="' + (R.txt ? 'hair' : '') + ((look[R.k] | 0) === i ? ' on' : '') + (own ? '' : ' lock') + '"'
+        + (R.txt ? '>' + R.list[i] : ' style="background:' + hexCss(R.list[i]) + '">') + (badge !== '' ? '<span>' + badge + '</span>' : '') + '</button>';
     }
-    el.innerHTML = h;
-  };
-  mk('swSkin', LOOK_SKIN, 'skin'); mk('swBelt', LOOK_BELT, 'belt'); mk('swHair', LOOK_HAIR, 'hair', true);
+    h += '</div></div>';
+  }
+  document.getElementById('lkRows').innerHTML = h;
   document.getElementById('lenvn').textContent = String(career.env);
 }
 function openLocker() {
@@ -1629,6 +1786,9 @@ function openLocker() {
   // stand the wrestler in the middle of the ring so the sheet never hides it
   mitt.x = mitt.tx = 0; mitt.z = mitt.tz = 0; mitt.vx = mitt.vz = 0; mitt.yaw = Math.PI;
   clearFoes();                                   /* the ring is yours while you dress / shop */
+  elBanner.classList.remove('on'); bannerT = 0;
+  document.getElementById('lkMsg').textContent = '';
+  try { localStorage.setItem('shoveoff.seen', '1'); } catch (x) {}
   renderLocker(); elLocker.classList.add('on');
 }
 elLocker.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
@@ -1636,10 +1796,14 @@ elLocker.addEventListener('click', function (e) {
   e.stopPropagation();
   var b = e.target.closest ? e.target.closest('button[data-k]') : null;
   if (!b) return;
-  var k = b.getAttribute('data-k'), v = +b.getAttribute('data-v');
-  if (k === 'belt' && !beltOwned(v)) {
-    if (career.env < BELT_PRICE[v]) { thud(120, 0.12, 0.2); b.animate([{ transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'none' }], 180); return; }
-    career.env -= BELT_PRICE[v]; career.owned.push(v); saveCareer(); hud();
+  var k = b.getAttribute('data-k'), v = +b.getAttribute('data-v'), R = lookRow(k), msg = document.getElementById('lkMsg');
+  msg.textContent = '';
+  if (!lookOwned(k, v)) {
+    var no = function (t) { msg.textContent = t; thud(120, 0.12, 0.2); b.animate([{ transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'none' }], 180); };
+    if (!rankOk(R, v)) return no('REACH ' + RANKS[R.rank[v]].name + ' TO UNLOCK ' + R.list[v]);
+    if (career.env < R.price[v]) return no('NEED ' + (R.price[v] - career.env) + ' MORE ENVELOPES');
+    career.env -= R.price[v]; career.own.push(k + ':' + v); saveCareer(); hud();
+    msg.textContent = R.list[v] === undefined ? 'BOUGHT!' : (R.txt ? R.list[v] : 'NEW ' + R.lbl) + ' UNLOCKED';
     chime(880, 0.2); puff(mitt.x, 1.0, mitt.z, 18, C.gold, 4.0, 0.1, -6);
   }
   setLook(k, v); thud(260, 0.06, 0.12, 'triangle');
@@ -1668,7 +1832,11 @@ function renderHome() {
   el.className = 'card' + (cost === undefined ? ' max' : career.env < cost ? ' no' : ' glow');
   document.getElementById('chC').innerHTML = cost === undefined ? 'FULL' : '<span class="envi"></span>' + cost;
   var cheapest = null;
-  for (var b = 0; b < LOOK_BELT.length; b++) if (!beltOwned(b) && (cheapest === null || BELT_PRICE[b] < cheapest)) cheapest = BELT_PRICE[b];
+  for (var lr = 0; lr < LOOK_ROWS.length; lr++) {
+    var LR = LOOK_ROWS[lr];
+    for (var b = 0; b < LR.list.length; b++)
+      if (!lookOwned(LR.k, b) && rankOk(LR, b) && (cheapest === null || LR.price[b] < cheapest)) cheapest = LR.price[b];
+  }
   document.getElementById('hlook').className = 'card' + (cheapest !== null && career.env >= cheapest ? ' glow' : '');
   document.getElementById('lkC').innerHTML = cheapest === null ? 'ALL OWNED' : 'FROM <span class="envi"></span>' + cheapest;
   var nt = nextTech();
@@ -1729,7 +1897,6 @@ elDojo.addEventListener('click', function (e) {
 function openHome() {
   elLocker.classList.remove('on');
   openLocker(); elLocker.classList.remove('on');      /* same staging: wrestler in the middle facing you */
-  mitt.z = mitt.tz = -1.35;                      /* stand further back so the taller sheet never hides him */
   renderHome(); elHome.classList.add('on');
 }
 elHome.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
@@ -1752,6 +1919,14 @@ document.getElementById('hfight').addEventListener('click', function (e) {
   elHint.style.opacity = '1';
 });
 document.getElementById('custom').addEventListener('click', function (e) { e.stopPropagation(); openHome(); });
+var elQuick = document.getElementById('quick');
+elQuick.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+document.getElementById('qSumo').addEventListener('click', function (e) { e.stopPropagation(); openLocker(); });
+document.getElementById('qHeya').addEventListener('click', function (e) { e.stopPropagation(); openHome(); });
+function quickOn() {
+  return G.phase === 'idle' && !elLocker.classList.contains('on') && !elHome.classList.contains('on')
+    && !elDojo.classList.contains('on') && !elBook.classList.contains('on');
+}
 
 // ------------------------------------------------------------- main loop
 var last = 0, acc = 0;
@@ -1885,7 +2060,7 @@ reset();
 G.phase = 'idle';
 (function () {
   var seen = false; try { seen = !!localStorage.getItem('shoveoff.seen'); } catch (x) {}
-  if (!/nolocker/.test(location.search) && !navigator.webdriver) { if (seen) openHome(); else openLocker(); }
+  if (!seen && !/nolocker/.test(location.search) && !navigator.webdriver) openLocker();
 })();
 if (!elHome.classList.contains('on') && !elLocker.classList.contains('on')) elHint.style.opacity = '1';
 requestAnimationFrame(tick);
