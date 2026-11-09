@@ -1808,7 +1808,13 @@ function onMove(cx, cy) {
 }
 function onUp() { dragging = false; }
 
-cv.addEventListener('pointerdown', function (e) { e.preventDefault(); onDown(e.clientX, e.clientY); });
+// a tap on the ring around an open sheet (MY SUMO, UPGRADES, Dojo, Book) must never start a bout
+function sheetOpen() {
+  var ids = ['locker', 'home', 'dojo', 'book'];
+  for (var i = 0; i < ids.length; i++) if (document.getElementById(ids[i]).classList.contains('on')) return true;
+  return false;
+}
+cv.addEventListener('pointerdown', function (e) { e.preventDefault(); if (sheetOpen()) return; onDown(e.clientX, e.clientY); });
 window.addEventListener('pointermove', function (e) { onMove(e.clientX, e.clientY); });
 window.addEventListener('pointerup', onUp);
 window.addEventListener('pointercancel', onUp);
@@ -1851,6 +1857,7 @@ function renderLocker() {
 var lockerFrom = 'first';
 function openLocker(from) {
   lockerFrom = from || 'ring';
+  elHome.classList.remove('on'); elDojo.classList.remove('on'); elBook.classList.remove('on');   /* one sheet at a time */
   document.getElementById('fight').textContent = lockerFrom === 'first' ? 'FIGHT!' : 'DONE';
   elOver.classList.remove('on');
   reset(); G.phase = 'idle';
