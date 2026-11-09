@@ -81,11 +81,21 @@
   .envi::after{content:'';position:absolute;left:0;right:0;top:11px;height:9px;background:#d83a3a}
   #over .env{font-size:26px;font-weight:800;color:#ffe493;display:flex;align-items:center;gap:8px;
     text-shadow:0 3px 0 #b5431f}
-  #banner{position:absolute;left:0;right:0;top:25%;text-align:center;opacity:0;transform:translateY(10px);
+  #banner{position:absolute;left:16px;right:16px;top:73%;text-align:center;opacity:0;transform:translateY(10px);
     transition:opacity .25s,transform .25s}
   #banner.on{opacity:1;transform:none}
-  #banner .b1{font-size:20px;font-weight:600;color:#fff0e2;letter-spacing:.22em;text-shadow:0 2px 4px rgba(60,18,40,.7)}
+  #banner .b1{font-size:17px;font-weight:800;color:#fff0e2;letter-spacing:.12em;text-shadow:0 2px 4px rgba(60,18,40,.7)}
   #banner .b2{font-size:40px;font-weight:800;color:#fff;line-height:1.05;text-shadow:0 3px 0 #19958f,0 8px 18px rgba(60,18,40,.5)}
+  #rival{position:absolute;display:none;transform:translate(-50%,-100%);padding:2px 12px;border-radius:12px;
+    background:#2b1410;color:#ffd45a;font-size:16px;font-weight:800;letter-spacing:.08em;white-space:nowrap;
+    box-shadow:0 3px 0 rgba(0,0,0,.25)}
+  #ladder{display:none;flex-direction:column;align-items:center;gap:6px}
+  #ladder.on{display:flex}
+  #ladder .pips{display:flex;gap:5px}
+  #ladder .pip{width:22px;height:10px;border-radius:5px;background:rgba(255,255,255,.28)}
+  #ladder .pip.done{background:#ffe9d4}
+  #ladder .pip.now{background:#ffd45a;transform:scaleY(1.6);box-shadow:0 0 10px #ffd45a}
+  #ladder .rn{font-size:15px;font-weight:800;color:#ffe9d4;letter-spacing:.14em}
   @keyframes sway{from{transform:translateX(-24px)}to{transform:translateX(24px)}}
 </style>
 </head>
@@ -94,6 +104,7 @@
 <div id="ui">
   <div id="top"><div class="lbl" id="boutlbl">BOUT 1/5</div><div class="val" id="score">0</div><div class="dots" id="dots"></div>
     <div id="tr"><span class="envi"></span><span id="envn">0</span></div></div>
+  <div id="rival"></div>
   <div id="banner"><div class="b1" id="ban1"></div><div class="b2" id="ban2"></div></div>
   <div id="chain"></div>
   <div id="edge"></div>
@@ -102,6 +113,7 @@
     <div class="big" id="overbig">OFF THE RING</div>
     <div class="sub" id="oversub"></div>
     <div class="dots" id="overdots"></div>
+    <div id="ladder"><div class="pips" id="pips"></div><div class="rn" id="rn"></div></div>
     <div class="env" id="overenv"></div>
     <button id="again">AGAIN</button>
     <button id="custom">MY SUMO</button>
@@ -139,6 +151,7 @@ var C = {
 };
 
 // ---------------------------------------------------------------- renderer
+var ropeMat, bandMat;   /* created once mat() exists, recoloured per rank */
 var cv = document.getElementById('cv');
 var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -213,10 +226,11 @@ scene.add(ringGroup);
   pil.position.y = -5.8;
   ringGroup.add(pil);
   // the rope: the line you must shove them past
-  var rope = new THREE.Mesh(new THREE.TorusGeometry(RING_R, 0.13, 10, 72), mat(C.straw));
+  ropeMat = mat(C.straw); bandMat = mat(C.strawDark);
+  var rope = new THREE.Mesh(new THREE.TorusGeometry(RING_R, 0.13, 10, 72), ropeMat);
   rope.rotation.x = Math.PI / 2; rope.position.y = 0.06;
   ringGroup.add(rope);
-  var band = new THREE.BoxGeometry(0.05, 0.29, 0.29), bandM = mat(C.strawDark);
+  var band = new THREE.BoxGeometry(0.05, 0.29, 0.29), bandM = bandMat;
   for (var bi = 0; bi < 44; bi++) {
     var ba = bi / 44 * Math.PI * 2, bm = new THREE.Mesh(band, bandM);
     bm.position.set(Math.cos(ba) * RING_R, 0.06, Math.sin(ba) * RING_R);
@@ -232,6 +246,7 @@ scene.add(ringGroup);
   inner.rotation.x = Math.PI / 2; inner.position.y = 0.012;
   ringGroup.add(inner);
 })();
+var crowdFolk = [];
 (function () {
   var FLOOR_Y = -10;
   var floor = new THREE.Mesh(new THREE.CylinderGeometry(40, 40, 0.4, 48), mat(C.floor));
@@ -251,9 +266,22 @@ scene.add(ringGroup);
       bd.scale.set(0.42, 0.5, 0.42); bd.position.set(x, y + 0.6, z); scene.add(bd);
       var hd = new THREE.Mesh(GEO.sphLo, mat(kim[(i * 3 + row) % kim.length]));
       hd.scale.setScalar(0.26); hd.position.set(x, y + 1.25, z); scene.add(hd);
+      crowdFolk.push({ bd: bd, hd: hd, h: ((i * 37 + row * 101) % 97) / 97 });
     }
   }
 })();
+
+// rank dressing: the rope warms toward gold and the stands fill up as you climb
+function dressRank(rank, of) {
+  var k = rank / (of - 1);
+  ropeMat.color.set(C.straw).lerp(new THREE.Color(0xffc93a), k);
+  bandMat.color.set(C.strawDark).lerp(new THREE.Color(rank >= 6 ? 0x7a2a8a : 0xb5431f), Math.min(1, k * 1.6));
+  var fill = 0.25 + 0.75 * k;
+  for (var i = 0; i < crowdFolk.length; i++) {
+    var on = crowdFolk[i].h < fill;
+    crowdFolk[i].bd.visible = on; crowdFolk[i].hd.visible = on;
+  }
+}
 
 // red flare on the rope when the hand is near the edge
 var dangerRope = new THREE.Mesh(new THREE.TorusGeometry(RING_R, 0.145, 8, 64),
@@ -606,11 +634,34 @@ var foes = [];
 // ------------------------------------------------------------- career: a basho of 5 bouts, ranks
 // Every bout is the same crowded ring as before; it now has a finish line (throw N off).
 // Step 1 ships the first 3 ranks. Numbers are placeholders until the config pass.
+var ALL = ['lug', 'twins', 'charger', 'greaser', 'anchor'];
 var RANKS = [
   { name: 'JONOKUCHI', goal: 4, cap: 2, pool: ['lug'], env: 2 },
   { name: 'JONIDAN', goal: 5, cap: 3, pool: ['lug', 'twins'], env: 3 },
-  { name: 'SANDANME', goal: 6, cap: 3, pool: ['lug', 'twins', 'charger'], env: 4 }
+  { name: 'SANDANME', goal: 6, cap: 3, pool: ['lug', 'twins', 'charger'], env: 4 },
+  { name: 'MAKUSHITA', goal: 6, cap: 3, pool: ['lug', 'twins', 'charger', 'greaser'], env: 5 },
+  { name: 'JURYO', goal: 7, cap: 3, pool: ALL, env: 6 },
+  { name: 'MAEGASHIRA', goal: 7, cap: 4, pool: ALL, env: 8 },
+  { name: 'KOMUSUBI', goal: 8, cap: 4, pool: ALL, env: 10 },
+  { name: 'SEKIWAKE', goal: 8, cap: 4, pool: ALL, env: 12 },
+  { name: 'OZEKI', goal: 9, cap: 4, pool: ALL, env: 15 },
+  { name: 'YOKOZUNA', goal: 10, cap: 4, pool: ALL, env: 20 }
 ];
+// the last bout of every basho brings a named rival into the crowd: the bout is not won until it is off.
+// mods multiply the base type; kept modest so skill, not mass, decides.
+var RIVALS = [
+  { name: 'BIG MOCHI', base: 'lug', tip: 'BIGGER AND STEADIER', r: 1.25, m: 1.4, grip: 1.3, lean0: 0 },
+  { name: 'TWIN STORM', base: 'twins', tip: 'TWO OF THEM, BOTH MUST GO', cd: 0.75, spd: 1.1 },
+  { name: 'THE RAM', base: 'charger', tip: 'CHARGES TWICE AS OFTEN', cd: 0.55, spd: 1.15 },
+  { name: 'BUTTERBALL', base: 'greaser', tip: 'SLIPS OUT OF EVERY SHOVE', r: 1.15, grip: 0.6 },
+  { name: 'IRON BELLY', base: 'anchor', tip: 'TIP IT BEFORE YOU PUSH', r: 1.1, m: 1.3, grip: 1.25 },
+  { name: 'TSUNAMI', base: 'charger', tip: 'A HEAVY CHARGER', r: 1.25, m: 1.4, spd: 1.1 },
+  { name: 'GREASE KING', base: 'greaser', tip: 'BIG AND SLIPPERY', r: 1.3, m: 1.4, grip: 0.7 },
+  { name: 'THE MOUNTAIN', base: 'anchor', tip: 'HUGE, BARELY MOVES', r: 1.25, m: 1.45, grip: 1.3 },
+  { name: 'THUNDER', base: 'charger', tip: 'NEVER STOPS CHARGING', m: 1.3, cd: 0.5, spd: 1.25 },
+  { name: 'THE GREAT WALL', base: 'anchor', tip: 'THE LAST WALL', r: 1.35, m: 1.5, grip: 1.35, cd: 0.7 }
+];
+var RIVAL_BELT = 0xffc93a;
 var BOUTS = 5, ZENSHO_ENV = 10, CAREER_KEY = 'shoveoff.career';
 var career = (function () {
   try { var o = JSON.parse(localStorage.getItem(CAREER_KEY) || 'null'); if (o && o.res) return o; } catch (x) {}
@@ -619,6 +670,9 @@ var career = (function () {
 function saveCareer() { try { localStorage.setItem(CAREER_KEY, JSON.stringify(career)); } catch (x) {} }
 function rankNow() { return RANKS[career.rank]; }
 function boutGoal() { return rankNow().goal + Math.floor(career.bout / 2); }
+function rivalBout() { return career.bout === BOUTS - 1; }
+function rivalNow() { return RIVALS[career.rank]; }
+function boutDone() { return G.score >= boutGoal() && (!rivalBout() || (G.rivalIn && G.rivalLeft === 0)); }
 function dotsHtml(res) {
   var h = '';
   for (var i = 0; i < BOUTS; i++) h += '<span class="dot' + (i < res.length ? (res[i] ? ' w' : ' l') : '') + '"></span>';
@@ -633,6 +687,17 @@ function hud() {
   elScore.textContent = Math.min(G.score, boutGoal()) + '/' + boutGoal();
   elDots.innerHTML = dotsHtml(career.res);
   elEnvN.textContent = String(career.env);
+  dressRank(career.rank, RANKS.length);
+}
+var elRival = document.getElementById('rival');
+function ladder(on) {
+  var el = document.getElementById('ladder');
+  if (!on) { el.classList.remove('on'); return; }
+  var h = '';
+  for (var i = 0; i < RANKS.length; i++) h += '<span class="pip' + (i < career.rank ? ' done' : i === career.rank ? ' now' : '') + '"></span>';
+  document.getElementById('pips').innerHTML = h;
+  document.getElementById('rn').textContent = rankNow().name + ' \u00b7 ' + (career.rank + 1) + '/' + RANKS.length;
+  el.classList.add('on');
 }
 function banner(a, b) {
   document.getElementById('ban1').textContent = a;
@@ -659,10 +724,11 @@ function endBout(win) {
     var l = BOUTS - w, from = career.rank, top = RANKS.length - 1;
     if (w === BOUTS) { title = 'ZENSHO!'; career.rank = Math.min(top, from + 2); gain += ZENSHO_ENV; career.env += ZENSHO_ENV; }
     else if (w > l) { title = 'KACHI-KOSHI'; career.rank = Math.min(top, from + 1); }
-    else { title = 'MAKE-KOSHI'; career.rank = Math.max(0, from - 1); }
+    else { title = 'MAKE-KOSHI'; if (from < top) career.rank = Math.max(0, from - 1); }
+    if (career.rank === top && from < top) title = 'YOKOZUNA!';
     sub = w + '\u2013' + l + ' \u00b7 ' + (career.rank > from ? 'PROMOTED TO ' + RANKS[career.rank].name
       : career.rank < from ? 'DOWN TO ' + RANKS[career.rank].name
-      : (w > l ? 'TOP RANK IN THIS BUILD' : 'STAYS ' + RANKS[from].name));
+      : (from === top ? 'YOKOZUNA STAYS YOKOZUNA' : 'STAYS ' + RANKS[from].name));
     btn = 'NEXT BASHO';
     career.bout = 0; career.res = [];
   }
@@ -673,6 +739,8 @@ function endBout(win) {
   elOverDots.innerHTML = dotsHtml(res);
   elOverEnv.innerHTML = gain ? '<span class="envi"></span>+' + gain : '';
   elAgain.textContent = btn;
+  ladder(btn === 'NEXT BASHO');
+  elBanner.classList.remove('on'); bannerT = 0;
   elOver.classList.add('on');
   if (win) chime(880, 0.2);
 }
@@ -700,16 +768,28 @@ var LEAN_THRESH = 4.5, LEAN_GAIN = 0.085;
 
 // ------------------------------------------------------------- spawning
 // how many of them share the ring with you: it fills up as you win
-function want() { return Math.max(1, Math.min(rankNow().cap, 1 + Math.floor(G.t / 13), boutGoal() - G.score)); }
+function want() {
+  var w = Math.max(1, Math.min(rankNow().cap, 1 + Math.floor(G.t / 13), boutGoal() - G.score));
+  return rivalBout() && !G.rivalIn ? Math.max(2, w) : w;     /* the rival climbs in right after the opener */
+}
 function liveCount() { var n = 0; for (var i = 0; i < foes.length; i++) if (foes[i].alive) n++; return n; }
 function typeOf(k) { for (var i = 0; i < TYPES.length; i++) if (TYPES[i].k === k) return i; return 0; }
 
 function spawnOne() {
   var idx = G.duel;
   var pool = rankNow().pool, k = idx === 0 ? 'lug' : pool[Math.floor(Math.random() * pool.length)];
-  if (k === 'twins' && liveCount() + 2 > rankNow().cap) k = 'lug';   /* twins only when there is room for both */
+  var RV = null;
+  if (rivalBout() && !G.rivalIn && idx >= 1) {
+    RV = rivalNow(); k = RV.base; G.rivalIn = true;
+    banner('RIVAL \u00b7 ' + RV.tip, RV.name); chime(330, 0.3); chime(247, 0.3);
+  } else if (k === 'twins' && liveCount() + 2 > rankNow().cap) k = 'lug';   /* twins only when there is room for both */
   var T = TYPES[typeOf(k)];
-  var boost = Math.min(2.0, Math.pow(1.045, idx + career.rank * 4 + career.bout));
+  if (RV) {
+    T = Object.assign({}, T, { col: RIVAL_BELT, r: T.r * (RV.r || 1), m: T.m * (RV.m || 1), grip: T.grip * (RV.grip || 1),
+      cd: T.cd * (RV.cd || 1), spd: T.spd * (RV.spd || 1), lean0: RV.lean0 !== undefined ? RV.lean0 : T.lean0 });
+    G.rivalLeft = T.n;
+  }
+  var boost = Math.min(2.0, Math.pow(1.045, idx + career.rank * 3 + career.bout));
   G.duel++;
   var ang = Math.atan2(-mitt.z, -mitt.x) + (Math.random() - 0.5) * 1.2;
   for (var i = 0; i < T.n; i++) {
@@ -722,7 +802,8 @@ function spawnOne() {
       r: T.r, m: T.m, grip: T.grip, cd: T.cd / boost, spd: T.spd * boost,
       type: T.k, obj: o, alive: true, lean: T.lean0, ldx: 0, ldz: 1,
       state: 'enter', chargeT: T.cd * (idx === 0 ? 1.5 : 0.8), stT: 0.30, enterY: 3.4,
-      yaw: 0, squash: 0, fy: 0, fvy: 0, spin: 0, hit: 0, connected: false, heel: 0, cdx: 0, cdz: 1, ctc: 0, pend: 0
+      yaw: 0, squash: 0, fy: 0, fvy: 0, spin: 0, hit: 0, connected: false, heel: 0, cdx: 0, cdz: 1, ctc: 0, pend: 0,
+      rival: !!RV
     });
   }
 }
@@ -735,11 +816,12 @@ function clearFoes() {
 function reset() {
   clearFoes();
   G.score = 0; G.duel = 0; G.t = 0; G.spawnT = 0; G.fallT = 0;
-  G.lastThrow = -9; G.chain = 0; G.wonT = 0;
+  G.lastThrow = -9; G.chain = 0; G.wonT = 0; G.rivalIn = false; G.rivalLeft = 0;
   mitt.x = 0; mitt.z = 1.25; mitt.vx = 0; mitt.vz = 0;
   mitt.tx = 0; mitt.tz = 1.25; mitt.y = 0; mitt.vy = 0; mitt.lastHit = -9;
   hud();
-  banner(rankNow().name + ' \u00b7 BOUT ' + (career.bout + 1) + '/' + BOUTS, 'SHOVE ' + boutGoal() + ' OFF');
+  if (rivalBout()) banner(rankNow().name + ' \u00b7 FINAL BOUT', 'SHOVE ' + boutGoal() + ' + ' + rivalNow().name);
+  else banner(rankNow().name + ' \u00b7 BOUT ' + (career.bout + 1) + '/' + BOUTS, 'SHOVE ' + boutGoal() + ' OFF');
   elHint.style.opacity = '0';
   elOver.classList.remove('on');
   spawnOne();
@@ -869,8 +951,9 @@ function foeOff(f) {
   f.fvy = 2.4 + Math.random() * 1.4;
   f.spin = (Math.random() - 0.5) * 9;
   G.score++;
+  if (f.rival) { G.rivalLeft--; if (G.rivalLeft === 0) { showChain(rivalNow().name + ' DOWN!'); chime(990, 0.3); } }
   hud();
-  if (G.phase === 'play' && G.score >= boutGoal()) boutWon();
+  if (G.phase === 'play' && boutDone()) boutWon();
   puff(f.x, 0.25, f.z, 16, C.dust, 5.2, 0.17);
   puff(f.x, 0.5, f.z, 10, C.spark, 4.2, 0.13, -3);
   whump(0.55, 1500, 0.3);
@@ -968,7 +1051,7 @@ function checkOut(dt) {
   }
   var live = 0;
   for (var j = 0; j < foes.length; j++) if (foes[j].alive) live++;
-  if (G.phase === 'play' && live < want() && G.spawnT <= 0 && G.score + live < boutGoal()) {
+  if (G.phase === 'play' && live < want() && G.spawnT <= 0 && (G.score + live < boutGoal() || (rivalBout() && !G.rivalIn))) {
     G.spawnT = live === 0 ? 0.40 : 0.90;
   }
   if (G.phase === 'play') {
@@ -1062,6 +1145,17 @@ function paint(dt) {
       puff(f.x, 0.1, f.z, 1, C.dust, 1.5, 0.12);
     }
   }
+
+  // rival nameplate
+  var rv = null;
+  for (var ri = 0; ri < foes.length; ri++) if (foes[ri].rival && foes[ri].alive) { rv = foes[ri]; break; }
+  if (rv && G.phase !== 'over') {
+    var pv = new THREE.Vector3(rv.x, rv.enterY + rv.r * 2.3, rv.z).project(cam);
+    elRival.textContent = rivalNow().name;
+    elRival.style.left = ((pv.x * 0.5 + 0.5) * VIEW.w) + 'px';
+    elRival.style.top = ((-pv.y * 0.5 + 0.5) * VIEW.h) + 'px';
+    elRival.style.display = 'block';
+  } else elRival.style.display = 'none';
 
   // edge warning
   var near = Math.min(1, Math.max(0, (Math.hypot(mitt.x, mitt.z) / RING_R - 0.56) / 0.44));
